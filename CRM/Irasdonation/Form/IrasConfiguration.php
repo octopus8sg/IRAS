@@ -68,19 +68,6 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     AND cont.external_identifier IS NOT NULL 
     LIMIT 5000";
 
-    // $sql = "SELECT 
-    // contrib.id, 
-    // cont.sort_name, 
-    // cont.external_identifier,
-    // contrib.total_amount,
-    // contrib.trxn_id,
-    // contrib.receive_date
-    // FROM civicrm_financial_trxn contrib 
-    // INNER JOIN civicrm_contact cont ON cont.id = contrib.contact_id 
-    // WHERE $inList
-    // AND contrib.contribution_status_id=1 
-    // LIMIT 10";
-
     $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
     $insert = '';
     $total = 0;
