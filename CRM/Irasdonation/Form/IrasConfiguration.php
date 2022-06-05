@@ -44,14 +44,23 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
 
     $csvData = [];
     $dataBody = [];
+
+    $repYear = date("Y");
+    if ($reportDate != null)
+      $repYear = date("Y", strtotime($reportDate));
+
+    //generate header of report
     while ($result->fetch()) {
-      $dataHead = [0, 7, date("Y"), 7, 0, $result->description, null, null, null, null, null, null, null, null];
+      $dataHead = [0, 7, $repYear, 7, 0, $result->description, null, null, null, null, null, null, null, null];
       array_push($csvData, $dataHead);
     }
 
     $inList = '1=1';
-    if ($reportDate == null) $inList = "trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
-    else $inList = "trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
+    if ($reportDate == null) {
+      $inList = "trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
+    } else {
+      $inList = "trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
+    }
 
     $sql = "SELECT 
     trxn.id, 
@@ -59,7 +68,8 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     cont.external_identifier,
     trxn.total_amount,
     contrib.trxn_id,
-    trxn.trxn_date
+    trxn.trxn_date,
+    contrib.receive_date
     FROM civicrm_financial_trxn trxn 
     INNER JOIN civicrm_contribution contrib ON contrib.trxn_id = trxn.trxn_id  
     INNER JOIN civicrm_contact cont ON cont.id = contrib.contact_id 
@@ -73,14 +83,17 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $total = 0;
     $incer = 0;
     $genDate = date('Y-m-d H:i:s');
-    
+
+    //generate body of th report
     while ($result->fetch()) {
       $idType = $this->paseUENNumber($result->external_identifier);
       if ($idType > 0) {
-        $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", $result->receive_date), $result->trxn_id, 'O', 'Z'];
+        $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
-        $insert =  "INSERT INTO civicrm_iras_donation VALUES ($result->id,'$genDate');";
-        CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
+        if ($reportDate == null) {
+          $insert =  "INSERT INTO civicrm_iras_donation VALUES ($result->id,'$genDate');";
+          CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
+        }
 
         array_push($csvData, $dataBody);
         $total += $result->total_amount;
@@ -88,10 +101,11 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       }
     }
 
+    //generate buttom line of the report
     $dataBottom = [2, $incer, $total, null, null, null, null, null, null, null, null, null, null, null];
     array_push($csvData, $dataBottom);
 
-    if(count($dataBody)>0) $this->generateCsv($csvData);
+    if (count($dataBody) > 0) $this->generateCsv($csvData);
     else CRM_Core_Session::setStatus('No any data to generate report', ts('All reporta are generated'), 'success', array('expires' => 5000));
 
     parent::postProcess();
@@ -131,7 +145,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     }
     fseek($f, 0);
     header('Content-Type: application/csv');
-    header('Content-Disposition: attachment; filename="report_'.date('dmY_His').'.csv";');
+    header('Content-Disposition: attachment; filename="report_' . date('dmY_His') . '.csv";');
     fpassthru($f);
     exit();
   }
