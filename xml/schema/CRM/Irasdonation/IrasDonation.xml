@@ -4,7 +4,7 @@
   <base>CRM/Irasdonation</base>
   <class>IrasDonation</class>
   <name>civicrm_iras_donation</name>
-  <comment>FIXME</comment>
+  <comment>IRAS Donation Reporting tool</comment>
   <log>true</log>
 
   <field>

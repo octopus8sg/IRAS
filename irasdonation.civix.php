@@ -7,8 +7,8 @@
  * extension.
  */
 class CRM_Irasdonation_ExtensionUtil {
-  const SHORT_NAME = 'irasdonation';
-  const LONG_NAME = 'irasdonation';
+  const SHORT_NAME = 'com.octopus8.iras';
+  const LONG_NAME = 'com.octopus8.iras';
   const CLASS_PREFIX = 'CRM_Irasdonation';
 
   /**

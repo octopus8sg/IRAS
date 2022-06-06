@@ -1,5 +1,5 @@
-Package: irasdonation
-Copyright (C) 2022, FIXME <FIXME>
+Package: com.octopus8.iras
+Copyright (C) 2022, Asliddin Oripov <>
 Licensed under the GNU Affero Public License 3.0 (below).
 
 -------------------------------------------------------------------------------
