@@ -12,11 +12,16 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
 {
   public function buildQuickForm()
   {
+    //start report from 
+    $this->add('datepicker', 'start_date', ts('Start date'), [], FALSE, ['time' => FALSE]);
+
+    //end report to
+    $this->add('datepicker', 'end_date', ts('End date'), [], FALSE, ['time' => FALSE]);
 
     // add form elements
     $this->add(
       'select', // field type
-      'value', // field name
+      'old_report', // field name
       'Old Reports', // field label
       $this->getDateOptions(), // list of options
       FALSE // is required
@@ -37,8 +42,9 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
   public function postProcess()
   {
     $values = $this->exportValues();
-    $reportDate = $values["value"];
-
+    $reportDate = $values["old_report"];
+    $startDate = $values["start_date"];
+    $endDate = $values["end_date"];
     $sql =  "SELECT cd.description FROM civicrm_domain cd WHERE cd.contact_id=1 LIMIT 1";
     $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
 
@@ -56,10 +62,22 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     }
 
     $inList = '1=1';
-    if ($reportDate == null) {
-      $inList = "trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
-    } else {
-      $inList = "trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
+
+    if ($startDate != null) {
+      $inList .= " AND trxn.trxn_date >= '$startDate'";
+    }
+
+    if ($endDate != null) {
+      $inList .= " AND trxn.trxn_date <= '$endDate'";
+    }
+
+    if ($startDate == null && $endDate == null) {
+      var_dump($startDate == null && $endDate == null);
+      if ($reportDate == null) {
+        $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
+      } else {
+        $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
+      }
     }
 
     $sql = "SELECT 
@@ -73,8 +91,9 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     FROM civicrm_financial_trxn trxn 
     INNER JOIN civicrm_contribution contrib ON contrib.trxn_id = trxn.trxn_id  
     INNER JOIN civicrm_contact cont ON cont.id = contrib.contact_id 
+    INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id   
     WHERE $inList
-    AND trxn.status_id=1 
+    AND trxn.status_id = 1 AND fintype.is_deductible = 1
     AND cont.external_identifier IS NOT NULL 
     LIMIT 5000";
 
@@ -90,7 +109,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       if ($idType > 0) {
         $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
-        if ($reportDate == null) {
+        if ($reportDate == null && ($startDate == null && $endDate == null)) {
           $insert =  "INSERT INTO civicrm_iras_donation VALUES ($result->id,'$genDate');";
           CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
         }
