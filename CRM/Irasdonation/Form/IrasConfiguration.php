@@ -18,6 +18,9 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     //end report to
     $this->add('datepicker', 'end_date', ts('End date'), [], FALSE, ['time' => FALSE]);
 
+    //include previously generateed reports 
+    $this->add('advcheckbox', 'include_previous', ts('Include receipts previously generated'));
+
     // add form elements
     $this->add(
       'select', // field type
@@ -45,6 +48,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $reportDate = $values["old_report"];
     $startDate = $values["start_date"];
     $endDate = $values["end_date"];
+    $includePrevious = $values["include_previous"];
     $sql =  "SELECT cd.description FROM civicrm_domain cd WHERE cd.contact_id=1 LIMIT 1";
     $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
 
@@ -72,9 +76,12 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     }
 
     if ($startDate == null && $endDate == null) {
-      var_dump($startDate == null && $endDate == null);
       if ($reportDate == null) {
-        $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
+        if ($includePrevious == TRUE) {
+          $inList .= " ";
+        } else {
+          $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
+        }
       } else {
         $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
       }
@@ -109,7 +116,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       if ($idType > 0) {
         $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
-        if ($reportDate == null && ($startDate == null && $endDate == null)) {
+        if ($reportDate == null) {
           $insert =  "INSERT INTO civicrm_iras_donation VALUES ($result->id,'$genDate');";
           CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
         }
