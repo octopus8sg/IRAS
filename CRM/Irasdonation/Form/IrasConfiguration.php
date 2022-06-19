@@ -77,9 +77,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
 
     if ($startDate == null && $endDate == null) {
       if ($reportDate == null) {
-        if ($includePrevious == TRUE) {
-          $inList .= " ";
-        } else {
+        if ($includePrevious == FALSE) {
           $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
         }
       } else {
