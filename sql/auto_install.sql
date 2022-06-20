@@ -17,7 +17,7 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
-DROP TABLE IF EXISTS `civicrm_iras_donation`;
+DROP TABLE IF EXISTS `civicrm_o8_iras_donation`;
 
 SET FOREIGN_KEY_CHECKS=1;
 -- /*******************************************************
@@ -28,14 +28,14 @@ SET FOREIGN_KEY_CHECKS=1;
 
 -- /*******************************************************
 -- *
--- * civicrm_iras_donation
+-- * civicrm_o8_iras_donation
 -- *
 -- * FIXME
 -- *
 -- *******************************************************/
-CREATE TABLE `civicrm_iras_donation` (
+CREATE TABLE `civicrm_o8_iras_donation` (
   `financial_trxn_id` int unsigned COMMENT 'FK to Contact',
   `created_date` datetime COMMENT 'Created date',
-  CONSTRAINT FK_civicrm_iras_donation_financial_trxn_id FOREIGN KEY (`financial_trxn_id`) REFERENCES `civicrm_financial_trxn`(`id`) ON DELETE CASCADE
+  CONSTRAINT FK_civicrm_o8_iras_donation_financial_trxn_id FOREIGN KEY (`financial_trxn_id`) REFERENCES `civicrm_financial_trxn`(`id`) ON DELETE CASCADE
 )
 ENGINE=InnoDB;

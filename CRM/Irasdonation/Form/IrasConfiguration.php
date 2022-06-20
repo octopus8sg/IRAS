@@ -78,10 +78,10 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     if ($startDate == null && $endDate == null) {
       if ($reportDate == null) {
         if ($includePrevious == FALSE) {
-          $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date IS NOT NULL)";
+          $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL)";
         }
       } else {
-        $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
+        $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
       }
     }
 
@@ -115,7 +115,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
         $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
         if ($reportDate == null) {
-          $insert =  "INSERT INTO civicrm_iras_donation VALUES ($result->id,'$genDate');";
+          $insert =  "INSERT INTO civicrm_o8_iras_donation VALUES ($result->id,'$genDate');";
           CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
         }
 
@@ -176,7 +176,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
 
   public function getDateOptions()
   {
-    $sql = 'SELECT cid.created_date FROM civicrm_iras_donation cid WHERE cid.created_date IS NOT NULL GROUP BY cid.created_date ORDER BY cid.created_date DESC';
+    $sql = 'SELECT cid.created_date FROM civicrm_o8_iras_donation cid WHERE cid.created_date IS NOT NULL GROUP BY cid.created_date ORDER BY cid.created_date DESC';
     $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
     $options = [null => E::ts('- select -')];
 

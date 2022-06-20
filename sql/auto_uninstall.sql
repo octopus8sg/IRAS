@@ -15,6 +15,6 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
-DROP TABLE IF EXISTS `civicrm_iras_donation`;
+DROP TABLE IF EXISTS `civicrm_o8_iras_donation`;
 
 SET FOREIGN_KEY_CHECKS=1;

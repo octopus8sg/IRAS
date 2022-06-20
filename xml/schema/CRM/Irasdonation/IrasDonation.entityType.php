@@ -5,6 +5,6 @@ return [
   [
     'name' => 'IrasDonation',
     'class' => 'CRM_Irasdonation_DAO_IrasDonation',
-    'table' => 'civicrm_iras_donation',
+    'table' => 'civicrm_o8_iras_donation',
   ],
 ];

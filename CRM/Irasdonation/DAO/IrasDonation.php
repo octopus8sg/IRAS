@@ -22,7 +22,7 @@ class CRM_Irasdonation_DAO_IrasDonation extends CRM_Core_DAO {
    *
    * @var string
    */
-  public static $_tableName = 'civicrm_iras_donation';
+  public static $_tableName = 'civicrm_o8_iras_donation';
 
         /**
          * Primary key field(s).
@@ -60,7 +60,7 @@ class CRM_Irasdonation_DAO_IrasDonation extends CRM_Core_DAO {
          * Class constructor.
          */
         public function __construct() {
-          $this->__table = 'civicrm_iras_donation';
+          $this->__table = 'civicrm_o8_iras_donation';
           parent::__construct();
         }
 
@@ -101,8 +101,8 @@ class CRM_Irasdonation_DAO_IrasDonation extends CRM_Core_DAO {
                 'name' => 'financial_trxn_id',
                 'type' => CRM_Utils_Type::T_INT,
                 'description' => E::ts('FK to Contact'),
-                'where' => 'civicrm_iras_donation.financial_trxn_id',
-                'table_name' => 'civicrm_iras_donation',
+                'where' => 'civicrm_o8_iras_donation.financial_trxn_id',
+                'table_name' => 'civicrm_o8_iras_donation',
                 'entity' => 'IrasDonation',
                 'bao' => 'CRM_Irasdonation_DAO_IrasDonation',
                 'localizable' => 0,
@@ -114,8 +114,8 @@ class CRM_Irasdonation_DAO_IrasDonation extends CRM_Core_DAO {
                 'type' => CRM_Utils_Type::T_DATE + CRM_Utils_Type::T_TIME,
                 'title' => E::ts('Created Date'),
                 'description' => E::ts('Created date'),
-                'where' => 'civicrm_iras_donation.created_date',
-                'table_name' => 'civicrm_iras_donation',
+                'where' => 'civicrm_o8_iras_donation.created_date',
+                'table_name' => 'civicrm_o8_iras_donation',
                 'entity' => 'IrasDonation',
                 'bao' => 'CRM_Irasdonation_DAO_IrasDonation',
                 'localizable' => 0,

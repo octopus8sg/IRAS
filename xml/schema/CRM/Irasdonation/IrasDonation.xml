@@ -3,7 +3,7 @@
 <table>
   <base>CRM/Irasdonation</base>
   <class>IrasDonation</class>
-  <name>civicrm_iras_donation</name>
+  <name>civicrm_o8_iras_donation</name>
   <comment>IRAS Donation Reporting tool</comment>
   <log>true</log>
 
