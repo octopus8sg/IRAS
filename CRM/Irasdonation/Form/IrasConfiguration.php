@@ -23,8 +23,6 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
 
     $this->add('text', 'client_id', ts('Client Id'), ['value' => $params['client_id']]);
     $this->add('text', 'client_secret', ts('Client secret'), ['value' => $params['client_secret']]);
-    // $this->add('advcheckbox', 'validate_only', ts('Include receipts previously generated'));
-    // $this->add('text', 'access_token', ts('Access token'), ['value'=>$params['access_token']]);
     
     $types = array(
       '5' => E::ts('UEN-BUSINESS'),
