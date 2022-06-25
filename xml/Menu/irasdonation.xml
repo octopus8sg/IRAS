@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <menu>
   <item>
-    <path>civicrm/iras-page</path>
-    <page_callback>CRM_Irasdonation_Page_IrasPage</page_callback>
-    <title>IrasPage</title>
+    <path>civicrm/iras_offline_report</path>
+    <page_callback>CRM_Irasdonation_Form_IrasOfflineReport</page_callback>
+    <title>IRAS offline reporting form</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
   <item>
     <path>civicrm/irasconfiguration</path>
     <page_callback>CRM_Irasdonation_Form_IrasConfiguration</page_callback>
-    <title>Iras Donation Report</title>
+    <title>IRAS extension configuration form</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>

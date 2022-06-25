@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<table>
+  <base>CRM/Irasdonation</base>
+  <class>IrasConfig</class>
+  <name>civicrm_o8_iras_config</name>
+  <comment>IRAS connection congiguration settings</comment>
+  <log>true</log>
+
+  <field>
+    <name>param_name</name>
+    <type>text</type>
+    <required>true</required>
+    <comment>parameter name</comment>
+    <html>
+      <type>ParamName</type>
+    </html>
+  </field>
+  <field>
+    <name>param_value</name>
+    <type>text</type>
+    <comment>value of parameter</comment>
+    <html>
+      <type>Value</type>
+    </html>
+  </field>
+</table>

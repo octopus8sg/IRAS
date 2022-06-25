@@ -7,7 +7,7 @@
  * extension.
  */
 class CRM_Irasdonation_ExtensionUtil {
-  const SHORT_NAME = 'com.octopus8.iras';
+  const SHORT_NAME = 'irasdonation';
   const LONG_NAME = 'com.octopus8.iras';
   const CLASS_PREFIX = 'CRM_Irasdonation';
 
@@ -305,6 +305,11 @@ function _irasdonation_civix_fixNavigationMenuItems(&$nodes, &$maxNavID, $parent
  */
 function _irasdonation_civix_civicrm_entityTypes(&$entityTypes) {
   $entityTypes = array_merge($entityTypes, [
+    'CRM_Irasdonation_DAO_IrasConfig' => [
+      'name' => 'IrasConfig',
+      'class' => 'CRM_Irasdonation_DAO_IrasConfig',
+      'table' => 'civicrm_o8_iras_config',
+    ],
     'CRM_Irasdonation_DAO_IrasDonation' => [
       'name' => 'IrasDonation',
       'class' => 'CRM_Irasdonation_DAO_IrasDonation',

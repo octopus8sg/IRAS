@@ -48,7 +48,7 @@ class CRM_Irasdonation_Upgrader_Base {
   public static function instance() {
     if (!self::$instance) {
       self::$instance = new CRM_Irasdonation_Upgrader(
-        'irasdonation',
+        'com.octopus8.iras',
         E::path()
       );
     }

@@ -18,6 +18,7 @@
 SET FOREIGN_KEY_CHECKS=0;
 
 DROP TABLE IF EXISTS `civicrm_o8_iras_donation`;
+DROP TABLE IF EXISTS `civicrm_o8_iras_config`;
 
 SET FOREIGN_KEY_CHECKS=1;
 -- /*******************************************************
@@ -28,9 +29,22 @@ SET FOREIGN_KEY_CHECKS=1;
 
 -- /*******************************************************
 -- *
+-- * civicrm_o8_iras_config
+-- *
+-- * IRAS connection congiguration settings
+-- *
+-- *******************************************************/
+CREATE TABLE `civicrm_o8_iras_config` (
+  `param_name` text NOT NULL COMMENT 'parameter name',
+  `param_value` text COMMENT 'value of parameter'
+)
+ENGINE=InnoDB;
+
+-- /*******************************************************
+-- *
 -- * civicrm_o8_iras_donation
 -- *
--- * FIXME
+-- * IRAS Donation Reporting tool
 -- *
 -- *******************************************************/
 CREATE TABLE `civicrm_o8_iras_donation` (
