@@ -13,15 +13,6 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
   public function buildQuickForm()
   {
 
-    $orgTypes = array(
-      null => E::ts('- select -'),
-      '5' => E::ts('UEN-BUSINESS'),
-      '6' => E::ts('UEN-LOCAL CO'),
-      'U' => E::ts('UEN-OTHERS'),
-      'A' => E::ts('ASGD'),
-      'I' => E::ts('ITR')
-    );
-
     $sql =  "SELECT * FROM civicrm_o8_iras_config ic";
     $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
 
@@ -34,8 +25,23 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $this->add('text', 'client_secret', ts('Client secret'), ['value' => $params['client_secret']]);
     // $this->add('advcheckbox', 'validate_only', ts('Include receipts previously generated'));
     // $this->add('text', 'access_token', ts('Access token'), ['value'=>$params['access_token']]);
-    $tmp = $orgTypes[$params['organization_type']];
-    $orgTypes[null] = $tmp;
+    
+    $types = array(
+      '5' => E::ts('UEN-BUSINESS'),
+      '6' => E::ts('UEN-LOCAL CO'),
+      'U' => E::ts('UEN-OTHERS'),
+      'A' => E::ts('ASGD'),
+      'I' => E::ts('ITR')
+    );
+    
+    $orgTypes = array(
+      $params['organization_type'] => $types[$params['organization_type']],
+      '5' => E::ts('UEN-BUSINESS'),
+      '6' => E::ts('UEN-LOCAL CO'),
+      'U' => E::ts('UEN-OTHERS'),
+      'A' => E::ts('ASGD'),
+      'I' => E::ts('ITR')
+    );
 
     $this->add(
       'select', // field type
@@ -78,18 +84,18 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     );
 
     $values = $this->exportValues();
-    $postedVals['client_id'] = $values["client_id"];
-    $postedVals['client_secret'] = $values["client_secret"];
-    $postedVals['organization_type'] = $values["organization_type"];
-    $postedVals['organisation_id'] = $values["organisation_id"];
-    $postedVals['authorised_person_id'] = $values["authorised_person_id"];
-    $postedVals['authorised_person_name'] = $values["authorised_person_name"];
-    $postedVals['authorised_person_designation'] = $values["authorised_person_designation"];
-    $postedVals['authorised_person_email'] = $values["authorised_person_email"];
+    $postedVals['client_id'] = $values['client_id'];
+    $postedVals['client_secret'] = $values['client_secret'];
+    $postedVals['organization_type'] = $values['organization_type'];
+    $postedVals['organisation_id'] = $values['organisation_id'];
+    $postedVals['authorised_person_id'] = $values['authorised_person_id'];
+    $postedVals['authorised_person_name'] = $values['authorised_person_name'];
+    $postedVals['authorised_person_designation'] = $values['authorised_person_designation'];
+    $postedVals['authorised_person_email'] = $values['authorised_person_email'];
 
     foreach ($postedVals as $key => $value) {
       if ($value == null) {
-        CRM_Core_Session::setStatus('All fields are must be filled', ts('Empty field'), 'success', array('expires' => 5000));
+        CRM_Core_Session::setStatus('All fields are must be filled', ts('Empty field'), 'warning', array('expires' => 5000));
         return;
       }
     }
@@ -103,88 +109,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
     }
 
-    // $sql =  "SELECT * FROM civicrm_o8_iras_config ic";
-    // $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
-
-    // $csvData = [];
-    // $dataBody = [];
-
-    // $repYear = date("Y");
-    // if ($reportDate != null)
-    //   $repYear = date("Y", strtotime($reportDate));
-
-    // //generate header of report
-    // while ($result->fetch()) {
-    //   $dataHead = [0, 7, $repYear, 7, 0, $result->description, null, null, null, null, null, null, null, null];
-    //   array_push($csvData, $dataHead);
-    // }
-
-    // $inList = '1=1';
-
-    // if ($startDate != null) {
-    //   $inList .= " AND trxn.trxn_date >= '$startDate'";
-    // }
-
-    // if ($endDate != null) {
-    //   $inList .= " AND trxn.trxn_date <= '$endDate'";
-    // }
-
-    // if ($startDate == null && $endDate == null) {
-    //   if ($reportDate == null) {
-    //     if ($includePrevious == FALSE) {
-    //       $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL)";
-    //     }
-    //   } else {
-    //     $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
-    //   }
-    // }
-
-    // $sql = "SELECT 
-    // trxn.id, 
-    // cont.sort_name, 
-    // cont.external_identifier,
-    // trxn.total_amount,
-    // contrib.trxn_id,
-    // trxn.trxn_date,
-    // contrib.receive_date
-    // FROM civicrm_financial_trxn trxn 
-    // INNER JOIN civicrm_contribution contrib ON contrib.trxn_id = trxn.trxn_id  
-    // INNER JOIN civicrm_contact cont ON cont.id = contrib.contact_id 
-    // INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id   
-    // WHERE $inList
-    // AND trxn.status_id = 1 AND fintype.is_deductible = 1
-    // AND cont.external_identifier IS NOT NULL 
-    // LIMIT 5000";
-
-    // $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
-    // $insert = '';
-    // $total = 0;
-    // $incer = 0;
-    // $genDate = date('Y-m-d H:i:s');
-
-    // //generate body of th report
-    // while ($result->fetch()) {
-    //   $idType = $this->paseUENNumber($result->external_identifier);
-    //   if ($idType > 0) {
-    //     $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
-
-    //     if ($reportDate == null) {
-    //       $insert =  "INSERT INTO civicrm_o8_iras_donation VALUES ($result->id,'$genDate');";
-    //       CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
-    //     }
-
-    //     array_push($csvData, $dataBody);
-    //     $total += $result->total_amount;
-    //     $incer++;
-    //   }
-    // }
-
-    // //generate buttom line of the report
-    // $dataBottom = [2, $incer, $total, null, null, null, null, null, null, null, null, null, null, null];
-    // array_push($csvData, $dataBottom);
-
-    // if (count($dataBody) > 0) $this->generateCsv($csvData);
-    // else CRM_Core_Session::setStatus('No any data to generate report', ts('All reporta are generated'), 'success', array('expires' => 5000));
+    CRM_Core_Session::setStatus('Configuration saved successfully', ts('Success'), 'success', array('expires' => 5000));
 
     parent::postProcess();
   }
