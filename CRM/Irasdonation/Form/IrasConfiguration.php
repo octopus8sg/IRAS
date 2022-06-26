@@ -49,10 +49,12 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       FALSE // is required
     );
 
-    $this->add('text', 'organisation_id', ts('Organization ID number(UEN)'), ['value' => $params['organisation_id']]);
+    $this->add('text', 'organisation_id', ts('Organization ID/UEN'), ['value' => $params['organisation_id']]);
+    $this->add('text', 'organisation_name', ts('Organization name'), ['value' => $params['organisation_name']]);
     $this->add('text', 'authorised_person_id', ts('Authorized User ID(SingpassID)'), ['value' => $params['authorised_person_id']]);
     $this->add('text', 'authorised_person_name', ts('Authorized user full name'), ['value' => $params['authorised_person_name']]);
     $this->add('text', 'authorised_person_designation', ts('Authorized user designation'), ['value' => $params['authorised_person_designation']]);
+    $this->add('text', 'phone', ts('Phone number'), ['value' => $params['phone']]);
     $this->add('text', 'authorised_person_email', ts('Authorized user email'), ['value' => $params['authorised_person_email']]);
 
     $this->addButtons(array(
@@ -75,9 +77,11 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       'client_secret' => null,
       'organization_type' => null,
       'organisation_id' => null,
+      'organisation_name' => null,
       'authorised_person_id' => null,
       'authorised_person_name' => null,
       'authorised_person_designation' => null,
+      'phone' => null,
       'authorised_person_email' => null,
     );
 
@@ -86,9 +90,11 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $postedVals['client_secret'] = $values['client_secret'];
     $postedVals['organization_type'] = $values['organization_type'];
     $postedVals['organisation_id'] = $values['organisation_id'];
+    $postedVals['organisation_name'] = $values['organisation_name'];
     $postedVals['authorised_person_id'] = $values['authorised_person_id'];
     $postedVals['authorised_person_name'] = $values['authorised_person_name'];
     $postedVals['authorised_person_designation'] = $values['authorised_person_designation'];
+    $postedVals['phone'] = $values['phone'];
     $postedVals['authorised_person_email'] = $values['authorised_person_email'];
 
     foreach ($postedVals as $key => $value) {
@@ -98,6 +104,10 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       }
     }
 
+    if($this->parsUENNumber($postedVals['organisation_id'])==0){
+      CRM_Core_Session::setStatus('Incorrect organization ID(UEN)', ts('Incorrect UEN'), 'warning', array('expires' => 5000));
+      return;
+    }
     //if all is ok clear parametrs
     $sql =  "TRUNCATE TABLE civicrm_o8_iras_config";
     CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
@@ -112,7 +122,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     parent::postProcess();
   }
 
-  function paseUENNumber($uen)
+  function parsUENNumber($uen)
   {
     $idTypes = ["nric" => 1, "fin" => 2, "uenb" => 5, "uenl" => 6, "asgd" => 8, "itr" => 10, "ueno" => 35];
     if ($uen == null) return 0;

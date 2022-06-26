@@ -105,15 +105,15 @@ function irasdonation_civicrm_entityTypes(&$entityTypes)
  */
 function irasdonation_civicrm_navigationMenu(&$menu)
 {
-  _irasdonation_civix_insert_navigation_menu($menu, 'Administer/CiviReport', [
+  _irasdonation_civix_insert_navigation_menu($menu, 'Administer', [
     'label' => E::ts('IRAS Donation'),
     'name' => 'iras_donation',
     //'url' => 'civicrm/iras-donation',
     'permission' => 'adminster CiviCRM',
   ]);
 
-  _irasdonation_civix_insert_navigation_menu($menu, 'Administer/CiviReport/iras_donation', [
-    'label' => E::ts('IRAS offline Report'),
+  _irasdonation_civix_insert_navigation_menu($menu, 'Administer/iras_donation', [
+    'label' => E::ts('IRAS offline report'),
     'name' => 'iras_donation_report',
     'url' => 'civicrm/iras_offline_report',
     'permission' => 'adminster CiviCRM',
@@ -122,7 +122,7 @@ function irasdonation_civicrm_navigationMenu(&$menu)
     'is_active' => 1
   ]);
 
-  _irasdonation_civix_insert_navigation_menu($menu, 'Administer/CiviReport/iras_donation', [
+  _irasdonation_civix_insert_navigation_menu($menu, 'Administer/iras_donation', [
     'label' => E::ts('IRAS extension settings'),
     'name' => 'iras_donation_settings',
     'url' => 'civicrm/irasconfiguration',

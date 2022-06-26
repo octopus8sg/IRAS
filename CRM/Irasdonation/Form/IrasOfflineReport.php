@@ -49,8 +49,13 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     $startDate = $values["start_date"];
     $endDate = $values["end_date"];
     $includePrevious = $values["include_previous"];
-    $sql =  "SELECT cd.description FROM civicrm_domain cd WHERE cd.contact_id=1 LIMIT 1";
+    $sql =  "SELECT * FROM civicrm_o8_iras_config ic";
     $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
+
+    $params = array();
+    while ($result->fetch()) {
+      $params[$result->param_name] = $result->param_value;
+    }
 
     $csvData = [];
     $dataBody = [];
@@ -58,30 +63,37 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     $repYear = date("Y");
     if ($reportDate != null)
       $repYear = date("Y", strtotime($reportDate));
+    
+    if ($startDate != null)
+      $repYear = date("Y", strtotime($startDate));      
 
-    //generate header of report
-    while ($result->fetch()) {
-      $dataHead = [0, 7, $repYear, 7, 0, $result->description, null, null, null, null, null, null, null, null];
-      array_push($csvData, $dataHead);
+    //generate header of report   
+    $dataHead = [0, 7, $repYear, 7, 0, $params['organisation_id'], null, null, null, null, null, null, null, null];
+    array_push($csvData, $dataHead);
+    
+    if(empty($params['organisation_id'])){
+      CRM_Core_Session::setStatus('Please configure extension before using', ts('Extension configuration'), 'warning', array('expires' => 5000));
+      return;
+    }
+
+    if (($startDate != null && $endDate == null) || ($startDate == null && $endDate != null)) {
+      CRM_Core_Session::setStatus('Please select date range', ts('Date range incorrect'), 'warning', array('expires' => 5000));
+      return;
     }
 
     $inList = '1=1';
 
-    if ($startDate != null) {
-      $inList .= " AND trxn.trxn_date >= '$startDate'";
-    }
-
-    if ($endDate != null) {
-      $inList .= " AND trxn.trxn_date <= '$endDate'";
-    }
-
-    if ($startDate == null && $endDate == null) {
-      if ($reportDate == null) {
-        if ($includePrevious == FALSE) {
-          $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL)";
+    if ($startDate != null && $endDate != null) {
+        if ($includePrevious == 0) {
+          $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL) AND trxn.trxn_date >= '$startDate'  AND trxn.trxn_date <= '$endDate'";
+        }else{
+          $inList .= " AND trxn.trxn_date >= '$startDate' AND trxn.trxn_date <= '$endDate'";
         }
-      } else {
+    }else{
+      if ($reportDate != null) {
         $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
+      }else{
+        $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL AND ci.created_date like'%$repYear%')";
       }
     }
 
@@ -110,12 +122,12 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
 
     //generate body of th report
     while ($result->fetch()) {
-      $idType = $this->paseUENNumber($result->external_identifier);
+      $idType = $this->parsUENNumber($result->external_identifier);
       if ($idType > 0) {
         $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
         if ($reportDate == null) {
-          $insert =  "INSERT INTO civicrm_o8_iras_donation VALUES ($result->id,'$genDate');";
+          $insert = "INSERT INTO civicrm_o8_iras_donation VALUES ($result->id,'$genDate');";
           CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
         }
 
@@ -135,7 +147,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     parent::postProcess();
   }
 
-  function paseUENNumber($uen)
+  function parsUENNumber($uen)
   {
     $idTypes = ["nric" => 1, "fin" => 2, "uenb" => 5, "uenl" => 6, "asgd" => 8, "itr" => 10, "ueno" => 35];
     if ($uen == null) return 0;
