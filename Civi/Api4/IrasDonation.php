@@ -3,11 +3,6 @@
 namespace Civi\Api4;
 
 __autoload();
-// if(!@include_once(dirname(__FILE__) . './IrasOnlineReport.php')) {
-//   //Logic here
-// }
-//   require_once(dirname(__FILE__) . './IrasOnlineReport.php');
-// }catch(Exception $e){};
 
 use CRM_IrasOnlineReport;
 /**
@@ -23,10 +18,11 @@ class IrasDonation extends Generic\DAOEntity
   {
     return (new Generic\Report(__CLASS__, __FUNCTION__, function ($getFieldsAction) {
       $cl = new CRM_IrasOnlineReport();
+      $reponse = $cl->onlineReport($getFieldsAction);
       return [
         [
-          'state' => $cl->onlineReport($getFieldsAction),
-          'code' => 200
+          'state' => $reponse->info,
+          'code' => $reponse->returnCode
         ]
       ];
     }))->setCheckPermissions($checkPermissions);

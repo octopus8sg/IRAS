@@ -93,7 +93,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
       if ($reportDate != null) {
         $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
       }else{
-        $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL AND ci.created_date like'%$repYear%')";
+        $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL AND YEAR(ci.created_date) like $repYear)";
       }
     }
 
