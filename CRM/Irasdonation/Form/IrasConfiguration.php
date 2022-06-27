@@ -54,7 +54,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $this->add('text', 'authorised_person_id', ts('Authorized User ID(SingpassID)'), ['value' => $params['authorised_person_id']]);
     $this->add('text', 'authorised_person_name', ts('Authorized user full name'), ['value' => $params['authorised_person_name']]);
     $this->add('text', 'authorised_person_designation', ts('Authorized user designation'), ['value' => $params['authorised_person_designation']]);
-    $this->add('text', 'phone', ts('Phone number'), ['value' => $params['phone']]);
+    $this->add('text', 'authorised_person_phone', ts('Phone number'), ['value' => $params['authorised_person_phone']]);
     $this->add('text', 'authorised_person_email', ts('Authorized user email'), ['value' => $params['authorised_person_email']]);
     $this->add('text', 'report_url', ts('Authorized user email'), ['value' => $params['report_url']]);
 
@@ -82,7 +82,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       'authorised_person_id' => null,
       'authorised_person_name' => null,
       'authorised_person_designation' => null,
-      'phone' => null,
+      'authorised_person_phone' => null,
       'authorised_person_email' => null,
       'report_url' => null
     );
@@ -96,7 +96,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $postedVals['authorised_person_id'] = $values['authorised_person_id'];
     $postedVals['authorised_person_name'] = $values['authorised_person_name'];
     $postedVals['authorised_person_designation'] = $values['authorised_person_designation'];
-    $postedVals['phone'] = $values['phone'];
+    $postedVals['authorised_person_phone'] = $values['authorised_person_phone'];
     $postedVals['authorised_person_email'] = $values['authorised_person_email'];
     $postedVals['report_url'] = $values['report_url'];
 

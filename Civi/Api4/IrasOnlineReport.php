@@ -66,6 +66,7 @@ if (!class_exists('CRM_IrasOnlineReport')) {
       $genDate = date('Y-m-d H:i:s');
 
       //generate body of th report
+      $details = array();
       while ($result->fetch()) {
         $idType = $this->parsUENNumber($result->external_identifier);
         if ($idType > 0) {
@@ -80,8 +81,26 @@ if (!class_exists('CRM_IrasOnlineReport')) {
       }
       
       //prepare body
+
       $body = array(
-        'test'=>'tessgasd'
+        'orgAndSubmissionInfo'=> [
+          'validateOnly'=>'true',
+          'basisYear'=>"$repYear",
+          'organisationIDType'=>$params['organization_type'],
+          'organisationIDNo'=>$params['organisation_id'],
+          'organisationName'=>$params['organisation_name'],
+          'batchIndicator'=>'O',
+          'authorisedPersonIDNo'=>$params['authorised_person_id'],
+          'authorisedPersonName'=>$params['authorised_person_name'],
+          'authorisedPersonDesignation'=>$params['authorised_person_designation'],
+          'telephone'=>$params['authorised_person_phone'],
+          'authorisedPersonEmail'=>$params['authorised_person_email'],
+          'numOfRecords'=>'2',
+          'totalDonationAmount'=>'5000'
+        ],
+        "donationDonorDtl"=>[
+
+        ]
       );
       // //generate buttom line of the report
       // $dataBottom = [2, $incer, $total, null, null, null, null, null, null, null, null, null, null, null];
