@@ -13,7 +13,6 @@
 namespace Civi\Api4\Generic;
 
 use Civi\API\Exception\NotImplementedException;
-
 /**
  * Lists information about fields for the $ENTITY entity.
  *

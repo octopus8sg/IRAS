@@ -23,7 +23,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
 
     $this->add('text', 'client_id', ts('Client Id'), ['value' => $params['client_id']]);
     $this->add('text', 'client_secret', ts('Client secret'), ['value' => $params['client_secret']]);
-    
+
     $types = array(
       '5' => E::ts('UEN-BUSINESS'),
       '6' => E::ts('UEN-LOCAL CO'),
@@ -31,7 +31,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       'A' => E::ts('ASGD'),
       'I' => E::ts('ITR')
     );
-    
+
     $orgTypes = array(
       $params['organization_type'] => $types[$params['organization_type']],
       '5' => E::ts('UEN-BUSINESS'),
@@ -56,6 +56,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $this->add('text', 'authorised_person_designation', ts('Authorized user designation'), ['value' => $params['authorised_person_designation']]);
     $this->add('text', 'phone', ts('Phone number'), ['value' => $params['phone']]);
     $this->add('text', 'authorised_person_email', ts('Authorized user email'), ['value' => $params['authorised_person_email']]);
+    $this->add('text', 'report_url', ts('Authorized user email'), ['value' => $params['report_url']]);
 
     $this->addButtons(array(
       array(
@@ -83,6 +84,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       'authorised_person_designation' => null,
       'phone' => null,
       'authorised_person_email' => null,
+      'report_url' => null
     );
 
     $values = $this->exportValues();
@@ -96,6 +98,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
     $postedVals['authorised_person_designation'] = $values['authorised_person_designation'];
     $postedVals['phone'] = $values['phone'];
     $postedVals['authorised_person_email'] = $values['authorised_person_email'];
+    $postedVals['report_url'] = $values['report_url'];
 
     foreach ($postedVals as $key => $value) {
       if ($value == null) {
@@ -104,7 +107,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
       }
     }
 
-    if($this->parsUENNumber($postedVals['organisation_id'])==0){
+    if ($this->parsUENNumber($postedVals['organisation_id']) == 0) {
       CRM_Core_Session::setStatus('Incorrect organization ID(UEN)', ts('Incorrect UEN'), 'warning', array('expires' => 5000));
       return;
     }

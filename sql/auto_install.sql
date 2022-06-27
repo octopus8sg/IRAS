@@ -17,6 +17,7 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
+DROP TABLE IF EXISTS `civicrm_o8_iras_response_log`;
 DROP TABLE IF EXISTS `civicrm_o8_iras_donation`;
 DROP TABLE IF EXISTS `civicrm_o8_iras_config`;
 
@@ -51,5 +52,18 @@ CREATE TABLE `civicrm_o8_iras_donation` (
   `financial_trxn_id` int unsigned COMMENT 'FK to Contact',
   `created_date` datetime COMMENT 'Created date',
   CONSTRAINT FK_civicrm_o8_iras_donation_financial_trxn_id FOREIGN KEY (`financial_trxn_id`) REFERENCES `civicrm_financial_trxn`(`id`) ON DELETE CASCADE
+)
+ENGINE=InnoDB;
+
+-- /*******************************************************
+-- *
+-- * civicrm_o8_iras_response_log
+-- *
+-- * iras log response logs
+-- *
+-- *******************************************************/
+CREATE TABLE `civicrm_o8_iras_response_log` (
+  `response_body` text NOT NULL COMMENT 'json response of json',
+  `created_date` datetime COMMENT 'Created date'
 )
 ENGINE=InnoDB;
