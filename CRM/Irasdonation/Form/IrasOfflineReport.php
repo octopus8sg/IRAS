@@ -122,7 +122,8 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
 
     //generate body of th report
     while ($result->fetch()) {
-      $idType = $this->parsUENNumber($result->external_identifier);
+      $config = new CRM_Irasdonation_Form_IrasConfiguration();
+      $idType = $config->parsUENNumber($result->external_identifier);
       if ($idType > 0) {
         $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
@@ -145,30 +146,6 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     else CRM_Core_Session::setStatus('No any data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
 
     parent::postProcess();
-  }
-
-  function parsUENNumber($uen)
-  {
-    $idTypes = ["nric" => 1, "fin" => 2, "uenb" => 5, "uenl" => 6, "asgd" => 8, "itr" => 10, "ueno" => 35];
-    if ($uen == null) return 0;
-    switch ($uen) {
-      case ($uen[0] == 'S' || $uen[0] == 'T') && is_numeric(substr($uen, 1, 7)):
-        return $idTypes['nric'];
-      case ($uen[0] == 'F' || $uen[0] == 'G') && is_numeric(substr($uen, 1, 7)):
-        return $idTypes['fin'];
-      case (strlen($uen) < 10 && is_numeric(substr($uen, 0, 8))):
-        return $idTypes['uenb'];
-      case (((int)substr($uen, 0, 4)) >= 1800 && ((int)substr($uen, 0, 4)) <= date("Y")) && is_numeric(substr($uen, 4, 5)):
-        return $idTypes['uenl'];
-      case ($uen[0] == 'A' && is_numeric(substr($uen, 1, 7))):
-        return $idTypes['asgd'];
-      case (is_numeric(substr($uen, 0, 9))):
-        return $idTypes['itr'];
-      case (($uen[0] == 'T' || $uen[0] == 'S' || $uen[0] == 'R') && is_numeric(substr($uen, 1, 2)) && !is_numeric(substr($uen, 3, 2)) && is_numeric(substr($uen, 5, 4))):
-        return $idTypes['ueno'];
-      default:
-        return 0;
-    }
   }
 
   function generateCsv($csvData)
