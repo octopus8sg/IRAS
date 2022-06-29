@@ -125,7 +125,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
       $config = new CRM_Irasdonation_Form_IrasConfiguration();
       $idType = $config->parsUENNumber($result->external_identifier);
       if ($idType > 0) {
-        $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->receive_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
+        $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->trxn_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
         if ($reportDate == null) {
           $insert = "INSERT INTO civicrm_o8_iras_donation VALUES ($result->id,'$genDate');";
