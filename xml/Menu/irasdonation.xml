@@ -3,13 +3,13 @@
   <item>
     <path>civicrm/iras_offline_report</path>
     <page_callback>CRM_Irasdonation_Form_IrasOfflineReport</page_callback>
-    <title>IRAS offline reporting form</title>
+    <title>IRAS Transactions</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
   <item>
     <path>civicrm/irasconfiguration</path>
     <page_callback>CRM_Irasdonation_Form_IrasConfiguration</page_callback>
-    <title>IRAS extension configuration form</title>
+    <title>IRAS Configuration</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>
