@@ -55,6 +55,7 @@ CREATE TABLE `civicrm_o8_iras_donation` (
   `comment` text NULL COMMENT 'comment to sending item',
   `log_id` int unsigned NULL COMMENT 'FK to Contact Response log',
   `created_date` datetime COMMENT 'Created date',
+  `edited_date` datetime COMMENT 'Edited date',
   PRIMARY KEY (`id`),
   CONSTRAINT FK_civicrm_o8_iras_donation_financial_trxn_id FOREIGN KEY (`financial_trxn_id`) REFERENCES `civicrm_financial_trxn`(`id`) ON DELETE CASCADE
 )

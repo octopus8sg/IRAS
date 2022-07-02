@@ -17,7 +17,6 @@ CRM.$(function ($) {
             });
         });
 
-        
         $("a.report_online").click(function( event ) {
             event.preventDefault();
             var href = $(this).attr('href');
@@ -59,6 +58,7 @@ CRM.$(function ($) {
             aoData.push({ "name": "sent_range_end_date",
                 "value": $('#sent_range_end_date').val() });
 
+            console.log(aoData);
             $.ajax( {
                 "dataType": 'json',
                 "type": "POST",

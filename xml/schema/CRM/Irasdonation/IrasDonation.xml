@@ -54,16 +54,17 @@
     <unique>false</unique>
     <comment>FK to Contact Response log</comment>
   </field>
-  <!-- <foreignKey>
-    <name>log_id</name>
-    <table>civicrm_o8_iras_response_log</table>
-    <key>id</key>
-    <onDelete>SET NULL</onDelete>
-  </foreignKey> -->
 
   <field>
     <name>created_date</name>
     <type>datetime</type>
     <comment>Created date</comment>
   </field>
+
+  <field>
+    <name>edited_date</name>
+    <type>datetime</type>
+    <comment>Edited date</comment>
+  </field>
+
 </table>
