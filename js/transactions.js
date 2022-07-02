@@ -1,4 +1,7 @@
 CRM.$(function ($) {
+    
+    var transactions_ajax_url = CRM.vars.source_url['transactions_ajax_url'];
+
     $(document).ready(function () {
 
         $("a.report_offline").click(function( event ) {
@@ -7,7 +10,7 @@ CRM.$(function ($) {
             var $el =CRM.loadForm(href, {
                 dialog: {width: '50%', height: '50%'}
             }).on('crmFormSuccess', function() {
-                var hm_tab = $('.selector-transactions');
+                var hm_tab = $('.transactions');
                 var hm_table = hm_tab.DataTable();
                 hm_table.draw();
                 
@@ -21,96 +24,59 @@ CRM.$(function ($) {
             var $el =CRM.loadForm(href, {
                 dialog: {width: '50%', height: '50%'}
             }).on('crmFormSuccess', function() {
-                var hm_tab = $('.selector-transactions');
+                var hm_tab = $('.transactions');
                 var hm_table = hm_tab.DataTable();
                 hm_table.draw();
             });
         });
 
-        // // $("a.devices-subtab").click(function (event) {
-        // var devices_sourceUrl = CRM.vars.source_url['device_sourceUrl'];
-        // // alert(devices_sourceUrl);
-        // //Reset Table, add Filter and Search Possibility
-        // //devices datatable
-        // var devices_tab = $('.selector-devices');
-        // var devices_table = devices_tab.DataTable();
-        // var devices_dtsettings = devices_table.settings().init();
-        // devices_dtsettings.bFilter = true;
-        // //turn on search
+        var transactions_tab = $('.transactions');
+        var transactions_table = transactions_tab.DataTable();
+        var transactions_dtsettings = transactions_table.settings().init();
+        transactions_dtsettings.bFilter = true;
+        transactions_dtsettings.sDom = '<"crm-datatable-pager-top"lp>Brt<"crm-datatable-pager-bottom"ip>';
+        //turn of search field
+        transactions_dtsettings.sAjaxSource = transactions_ajax_url;
+        transactions_dtsettings.fnInitComplete = function (oSettings, json) {
+        };
+        
+        transactions_dtsettings.fnDrawCallback = function (oSettings) {
+        };
 
-        // devices_dtsettings.sDom = '<"crm-datatable-pager-top"lp>Brt<"crm-datatable-pager-bottom"ip>';
-        // //turn of search field
-        // devices_dtsettings.sAjaxSource = devices_sourceUrl;
-        // devices_dtsettings.Buttons = ["csv", "pdf", "copy"];
-        // devices_dtsettings.fnInitComplete = function (oSettings, json) {
-        // };
-        // devices_dtsettings.fnDrawCallback = function (oSettings) {
-        //     // $("a.view-device").css('background','red');
-        //     $("a.view-device").click(function (event) {
-        //         event.preventDefault();
-        //         var href = $(this).attr('href');
-        //         // alert(href);
-        //         var $el = CRM.loadForm(href, {
-        //             dialog: { width: '50%', height: '50%' }
-        //         }).on('crmFormSuccess', function () {
-        //             var hm_tab = $('.selector-devices');
-        //             var hm_table = hm_tab.DataTable();
-        //             hm_table.draw();
-        //         });
-        //     });
-        //     // $("a.update-device").css('background','blue');
-        //     $("a.update-device").off("click").click(function (event) {
-        //         event.preventDefault();
-        //         var href = $(this).attr('href');
-        //         // alert(href);
-        //         var $el = CRM.loadForm(href, {
-        //             dialog: { width: '50%', height: '50%' }
-        //         }).on('crmFormSuccess', function () {
-        //             var hm_tab = $('.selector-devices');
-        //             var hm_table = hm_tab.DataTable();
-        //             hm_table.draw();
-        //         });
-        //     });
-        //     $("a.delete-device").off("click").click(function (event) {
-        //         event.preventDefault();
-        //         var href = $(this).attr('href');
-        //         // alert(href);
-        //         var $el = CRM.loadForm(href, {
-        //             dialog: { width: '50%', height: '50%' }
-        //         }).on('crmFormSuccess', function () {
-        //             var hm_tab = $('.selector-devices');
-        //             var hm_table = hm_tab.DataTable();
-        //             hm_table.draw();
-        //         });
-        //     });
-        // };
-        // devices_dtsettings.fnServerData = function (sSource, aoData, fnCallback) {
-        //     aoData.push({
-        //         "name": "device_type_id",
-        //         "value": $('#device_device_type_id').val()
-        //     });
-        //     aoData.push({
-        //         "name": "device_device_id",
-        //         "value": $('#device_device_id').val()
-        //     });
-        //     aoData.push({
-        //         "name": "contact_id",
-        //         "value": $('#device_contact_id').val()
-        //     });
-        //     $.ajax({
-        //         "dataType": 'json',
-        //         "type": "POST",
-        //         "url": sSource,
-        //         "data": aoData,
-        //         "success": fnCallback
-        //     });
-        // };
-        // devices_table.destroy();
-        // var new_devices_table = devices_tab.DataTable(devices_dtsettings);
-        // //End Reset Table
-        // $('.device-filter :input').change(function () {
-        //     new_devices_table.draw();
-        // });
+        transactions_dtsettings.fnServerData = function (sSource, aoData, fnCallback) {
+            console.log('url')
+            console.log(sSource)
+            aoData.push({ "name": "method",
+                "value": $('#method').val() });
+            aoData.push({ "name": "sent_response",
+                "value": $('#sent_response').val() });
+            aoData.push({ "name": "transaction_range_start_date",
+                "value": $('#transaction_range_start_date').val() });
+            aoData.push({ "name": "transaction_range_end_date",
+                "value": $('#transaction_range_end_date').val() });
+            aoData.push({ "name": "sent_range_start_date",
+                "value": $('#sent_range_start_date').val() });
+            aoData.push({ "name": "sent_range_end_date",
+                "value": $('#sent_range_end_date').val() });
+
+            $.ajax( {
+                "dataType": 'json',
+                "type": "POST",
+                "url": sSource,
+                "data": aoData,
+                "success": fnCallback
+            });
+        };
+
+        transactions_table.destroy();
+        var new_transactions_table = transactions_tab.DataTable(transactions_dtsettings);
+        //End Reset Table
+        $('.transactions-filter :input').change(function () {
+            console.log('changed')
+
+            new_transactions_table.draw();
+        });
 
     });
 });
+

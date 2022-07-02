@@ -9,8 +9,8 @@
           <table class="form-layout transactions-filter">
             <tbody>
             <tr>
-              <td class="label"><span>{$form.is_api.label}</span></td>
-              <td><span>{$form.is_api.html}</span></td>
+              <td class="label"><span>{$form.method.label}</span></td>
+              <td><span>{$form.method.html}</span></td>
               <td class="label"><span>{$form.sent_response.label}</span></td>
               <td><span>{$form.sent_response.html}</span></td>
             </tr>
@@ -21,10 +21,10 @@
               <td>{$form.transaction_range_end_date.html}</td>
             </tr>
             <tr>
-              <td class="label">{$form.send_range_start_date.label}</td>
-              <td>{$form.send_range_start_date.html}</td>
-              <td class="label">{$form.send_range_end_date.label}</td>
-              <td>{$form.send_range_end_date.html}</td>
+              <td class="label">{$form.sent_range_start_date.label}</td>
+              <td>{$form.sent_range_start_date.html}</td>
+              <td class="label">{$form.sent_range_end_date.label}</td>
+              <td>{$form.sent_range_end_date.html}</td>
             </tr>                                                
             </tbody>
           </table>
