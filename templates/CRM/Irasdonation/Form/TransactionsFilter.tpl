@@ -9,28 +9,22 @@
           <table class="form-layout transactions-filter">
             <tbody>
             <tr>
-              <td><span>{$form.is_api.label}</span></td>
+              <td class="label"><span>{$form.is_api.label}</span></td>
               <td><span>{$form.is_api.html}</span></td>
-            </tr>
-            <tr>
-              <td><span>{$form.sent_response.label}</span></td>
+              <td class="label"><span>{$form.sent_response.label}</span></td>
               <td><span>{$form.sent_response.html}</span></td>
             </tr>
             <tr>
-              <td><span>{$form.trn_start_date.label}</span></td>
-              <td><span>{$form.trn_start_date.html}</span></td>
+              <td class="label">{$form.transaction_range_start_date.label}</td>
+              <td>{$form.transaction_range_start_date.html}</td>
+              <td class="label">{$form.transaction_range_end_date.label}</td>
+              <td>{$form.transaction_range_end_date.html}</td>
             </tr>
             <tr>
-              <td><span>{$form.trn_end_date.label}</span></td>
-              <td><span>{$form.trn_end_date.html}</span></td>
-            </tr>
-            <tr>
-              <td><span>{$form.sent_start_date.label}</span></td>
-              <td><span>{$form.sent_start_date.html}</span></td>
-            </tr>
-            <tr>
-              <td><span>{$form.sent_end_date.label}</span></td>
-              <td><span>{$form.sent_end_date.html}</span></td>
+              <td class="label">{$form.send_range_start_date.label}</td>
+              <td>{$form.send_range_start_date.html}</td>
+              <td class="label">{$form.send_range_end_date.label}</td>
+              <td>{$form.send_range_end_date.html}</td>
             </tr>                                                
             </tbody>
           </table>

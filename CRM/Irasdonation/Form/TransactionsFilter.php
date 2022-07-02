@@ -15,8 +15,8 @@ class CRM_Irasdonation_Form_TransactionsFilter extends CRM_Core_Form
     $this->add(
       'select', // field type
       'is_api', // field name
-      'Sent Method', // field label
-      [2=>'Not sent', 0 => 'Offline', 1 => 'API'], // list of options
+      'Sent Method: ', // field label
+      [null => 'All', 2=>'New transactions', 0 => 'Offline', 1 => 'API'], // list of options
       FALSE // is required
     );
 
@@ -24,22 +24,44 @@ class CRM_Irasdonation_Form_TransactionsFilter extends CRM_Core_Form
     $this->add(
       'select', // field type
       'sent_response', // field name
-      'Sent Response', // field label
-      [10 => 'Success', 30 => 'Fail'], // list of options
+      'Sent Response: ', // field label
+      [null => 'All', 10 => 'Success', 30 => 'Fail'], // list of options
       FALSE // is required
     );
 
-    //start report from 
-    $this->add('datepicker', 'trn_start_date', ts('Transaction From'), [], FALSE, ['time' => FALSE]);
+    $this->addDatePickerRange('transaction_range',
+    'Select Date',
+    FALSE,
+    NULL,
+    'Transaction From: ',
+    'Transaction To: ',
+    [],
+    '_end_date',
+    '_start_date'
+    );
 
-    //end report to
-    $this->add('datepicker', 'trn_end_date', ts('Transaction To'), [], FALSE, ['time' => FALSE]);
+    $this->addDatePickerRange('send_range',
+    'Select Date',
+    FALSE,
+    NULL,
+    'Sent From: ',
+    'Sent To: ',
+    [],
+    '_end_date',
+    '_start_date'
+    );    
 
-    //start report from 
-    $this->add('datepicker', 'sent_start_date', ts('Sent From'), [], FALSE, ['time' => FALSE]);
+    // //start report from 
+    // $this->add('datepicker', 'trn_start_date', ts('Transaction From'), [], FALSE, ['time' => FALSE]);
 
-    //end report to
-    $this->add('datepicker', 'sent_end_date', ts('Sent To'), [], FALSE, ['time' => FALSE]);
+    // //end report to
+    // $this->add('datepicker', 'trn_end_date', ts('Transaction To'), [], FALSE, ['time' => FALSE]);
+
+    // //start report from 
+    // $this->add('datepicker', 'sent_start_date', ts('Sent From'), [], FALSE, ['time' => FALSE]);
+
+    // //end report to
+    // $this->add('datepicker', 'sent_end_date', ts('Sent To'), [], FALSE, ['time' => FALSE]);
 
     $this->addButtons(array(
       array(

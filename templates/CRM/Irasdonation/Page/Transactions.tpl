@@ -10,6 +10,10 @@
                 <i class="crm-i fa-plus-circle">&nbsp;</i>
                 {ts}Send via API{/ts}
             </a>
+            <a class="button report_offline" href="{crmURL p="civicrm/irasdonation/transactions_filter"}">
+                <i class="crm-i fa-plus-circle">&nbsp;</i>
+                {ts}Send via API{/ts}
+            </a>            
         </div>
         <div class="clear"></div>
         {include file="CRM/Irasdonation/Form/TransactionsFilter.tpl"}
