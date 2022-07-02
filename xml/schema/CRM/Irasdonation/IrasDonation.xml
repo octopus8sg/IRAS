@@ -8,6 +8,17 @@
   <log>true</log>
 
   <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique ID</comment>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+
+  <field>
     <name>financial_trxn_id</name>
     <type>int unsigned</type>
     <unique>TRUE</unique>
@@ -19,6 +30,37 @@
     <key>id</key>
     <onDelete>CASCADE</onDelete>
   </foreignKey>
+
+  <field>
+    <name>is_api</name>
+    <type>boolean</type>
+    <comment>api or offline report</comment>
+  </field>  
+
+  <field>
+    <name>comment</name>
+    <type>text</type>
+    <required>false</required>
+    <comment>comment to sending item</comment>
+    <html>
+      <type>Comment</type>
+    </html>
+  </field>
+
+  <field>
+    <name>log_id</name>
+    <type>int unsigned</type>
+    <required>false</required>
+    <unique>false</unique>
+    <comment>FK to Contact Response log</comment>
+  </field>
+  <!-- <foreignKey>
+    <name>log_id</name>
+    <table>civicrm_o8_iras_response_log</table>
+    <key>id</key>
+    <onDelete>SET NULL</onDelete>
+  </foreignKey> -->
+
   <field>
     <name>created_date</name>
     <type>datetime</type>

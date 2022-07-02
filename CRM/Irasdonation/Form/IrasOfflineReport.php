@@ -32,7 +32,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     $this->addButtons(array(
       array(
         'type' => 'submit',
-        'name' => E::ts('Generate report'),
+        'name' => E::ts('Generate and download report'),
         'isDefault' => TRUE,
       ),
     ));
@@ -44,8 +44,9 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
 
   public function postProcess()
   {
+
     $values = $this->exportValues();
-    $reportDate = $values["old_report"];
+    //$reportDate = null;//$values["old_report"];
     $startDate = $values["start_date"];
     $endDate = $values["end_date"];
     $includePrevious = $values["include_previous"];
@@ -56,13 +57,13 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     while ($result->fetch()) {
       $params[$result->param_name] = $result->param_value;
     }
-
+    
     $csvData = [];
     $dataBody = [];
 
     $repYear = date("Y");
-    if ($reportDate != null)
-      $repYear = date("Y", strtotime($reportDate));
+    // if ($reportDate != null)
+    //   $repYear = date("Y", strtotime($reportDate));
     
     if ($startDate != null)
       $repYear = date("Y", strtotime($startDate));      
@@ -90,11 +91,11 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
           $inList .= " AND trxn.trxn_date >= '$startDate' AND trxn.trxn_date <= '$endDate'";
         }
     }else{
-      if ($reportDate != null) {
-        $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
-      }else{
+      // if ($reportDate != null) {
+      //   $inList .= " AND trxn.id IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date = '$reportDate' AND ci.created_date IS NOT NULL)";
+      // }else{
         $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL AND YEAR(ci.created_date) like $repYear)";
-      }
+      //}
     }
 
     $sql = "SELECT 
@@ -127,10 +128,10 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
       if ($idType > 0) {
         $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->total_amount, date("Ymd", strtotime($result->trxn_date)), substr($result->trxn_id, 0, 10), 'O', 'Z'];
 
-        if ($reportDate == null) {
+        //if ($reportDate == null) {
           $insert = "INSERT INTO civicrm_o8_iras_donation VALUES ($result->id,'$genDate');";
           CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
-        }
+        //}
 
         array_push($csvData, $dataBody);
         $total += $result->total_amount;
@@ -145,7 +146,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     if (count($dataBody) > 0) $this->generateCsv($csvData);
     else CRM_Core_Session::setStatus('No any data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
 
-    parent::postProcess();
+    //parent::postProcess();
   }
 
   function generateCsv($csvData)

@@ -8,14 +8,36 @@
   <log>true</log>
 
   <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique ID</comment>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+
+  <field>
     <name>response_body</name>
     <type>text</type>
     <required>true</required>
-    <comment>json response of json</comment>
+    <comment>json response of request</comment>
     <html>
       <type>ResponseBody</type>
     </html>
   </field>
+
+  <field>
+    <name>response_code</name>
+    <type>int</type>
+    <required>false</required>
+    <comment>response code</comment>
+    <html>
+      <type>ResponseCode</type>
+    </html>
+  </field>  
+
   <field>
     <name>created_date</name>
     <type>datetime</type>
@@ -24,4 +46,5 @@
       <type>CreatedDate</type>
     </html>
   </field>
+
 </table>

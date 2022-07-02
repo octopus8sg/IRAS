@@ -49,8 +49,13 @@ ENGINE=InnoDB;
 -- *
 -- *******************************************************/
 CREATE TABLE `civicrm_o8_iras_donation` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ID',
   `financial_trxn_id` int unsigned COMMENT 'FK to Contact',
+  `is_api` tinyint COMMENT 'api or offline report',
+  `comment` text NULL COMMENT 'comment to sending item',
+  `log_id` int unsigned NULL COMMENT 'FK to Contact Response log',
   `created_date` datetime COMMENT 'Created date',
+  PRIMARY KEY (`id`),
   CONSTRAINT FK_civicrm_o8_iras_donation_financial_trxn_id FOREIGN KEY (`financial_trxn_id`) REFERENCES `civicrm_financial_trxn`(`id`) ON DELETE CASCADE
 )
 ENGINE=InnoDB;
@@ -63,7 +68,10 @@ ENGINE=InnoDB;
 -- *
 -- *******************************************************/
 CREATE TABLE `civicrm_o8_iras_response_log` (
-  `response_body` text NOT NULL COMMENT 'json response of json',
-  `created_date` datetime COMMENT 'Created date'
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ID',
+  `response_body` text NOT NULL COMMENT 'json response of request',
+  `response_code` int NULL COMMENT 'response code',
+  `created_date` datetime COMMENT 'Created date',
+  PRIMARY KEY (`id`)
 )
 ENGINE=InnoDB;
