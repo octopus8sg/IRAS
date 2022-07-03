@@ -22,7 +22,7 @@
                     <thead class="sticky">
                     <tr>
                         <th id="sortable" scope="col">
-                            {ts}Transaction ID{/ts}
+                            {ts}Receipt ID{/ts}
                         </th>
                         <th id="sortable" scope="col">
                             {ts}Transaction Date{/ts}

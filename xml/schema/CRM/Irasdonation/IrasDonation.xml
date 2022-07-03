@@ -61,10 +61,4 @@
     <comment>Created date</comment>
   </field>
 
-  <field>
-    <name>edited_date</name>
-    <type>datetime</type>
-    <comment>Edited date</comment>
-  </field>
-
 </table>

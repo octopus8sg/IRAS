@@ -23,7 +23,6 @@ class CRM_Irasdonation_DAO_IrasConfig extends CRM_Core_DAO {
    * @var string
    */
   public static $_tableName = 'civicrm_o8_iras_config';
-
         /**
          * Primary key field(s).
          *

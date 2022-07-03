@@ -16,7 +16,7 @@ class CRM_Irasdonation_Form_TransactionsFilter extends CRM_Core_Form
       'select', // field type
       'method', // field name
       'Sent Method: ', // field label
-      [null => 'All', 2 => 'New transactions', 0 => 'Offline', 1 => 'API'], // list of options
+      [null => 'All', 1 => 'New transactions', 2 => 'Offline', 3 => 'API'], // list of options
       FALSE // is required
     );
 

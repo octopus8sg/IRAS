@@ -58,7 +58,6 @@ CRM.$(function ($) {
             aoData.push({ "name": "sent_range_end_date",
                 "value": $('#sent_range_end_date').val() });
 
-            console.log(aoData);
             $.ajax( {
                 "dataType": 'json',
                 "type": "POST",
