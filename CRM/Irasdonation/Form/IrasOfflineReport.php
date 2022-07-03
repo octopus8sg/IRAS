@@ -150,7 +150,6 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     }
 
     if (count($dataBody) > 0) {
-      CRM_Core_Session::setStatus('Please wait generating file', ts('File Generation'), 'warning', array('expires' => 5000));
       $this->generateCsv($csvData);
     }
     else CRM_Core_Session::setStatus('No any data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));

@@ -24,7 +24,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
     $this->addButtons(array(
       array(
         'type' => 'submit',
-        'name' => E::ts('Generate and download report'),
+        'name' => E::ts('Generate and send report'),
         'isDefault' => TRUE,
       ),
     ));
@@ -143,7 +143,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
           'postalCode' => '',
           'donationAmount' => round($result->total_amount),
           'dateOfDonation' => date("Ymd", strtotime($result->receive_date)),
-          'receiptNum' => substr($result->trxn_id, 0, 10),
+          'receiptNum' => substr('asdf', 0, 10),
           'typeOfDonation' => 'O',
           'namingDonation' => 'Z'
         );
@@ -178,9 +178,17 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
 
     $response = null;
     if (count($details) > 0) {
-      CRM_Core_Session::setStatus('Please wait generating file', ts('File Generation'), 'warning', array('expires' => 5000));
       $response = $this->curl_post($url, $header, $body);
-      CRM_Core_Session::setStatus('Data sucessfully sent to IRAS', ts('File Generation'), 'success', array('expires' => 5000));
+      $sentMessage = '';
+      $sentMessage .= $response->info->message;
+      if($response->info->fieldInfoList != null)
+      $sentMessage .= ' > ' . json_encode($response->info->fieldInfoList);
+
+      if ($response->returnCode == 10) {
+        CRM_Core_Session::setStatus('Data sucessfully sent to IRAS', ts('Report sending status'), 'success', array('expires' => 5000));
+      } else {        
+        CRM_Core_Session::setStatus($sentMessage, ts('Report sending status'), 'error', array('expires' => 5000));
+      }
     } else CRM_Core_Session::setStatus('No any data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
 
     if ($response != null) {
@@ -198,7 +206,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         $insert = "INSERT INTO civicrm_o8_iras_donation(financial_trxn_id, is_api, log_id, created_date) VALUES ($value, 1, $log_id, '$genDate');";
         CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
       }
-      
+
       parent::postProcess();
     }
   }
