@@ -65,21 +65,26 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
       return;
     }
 
-    // if ($endDate == null || $startDate == null) {
-    //   CRM_Core_Session::setStatus('Please select date range', ts('Date range incorrect'), 'warning', array('expires' => 5000));
-    //   return;
-    // }
+    if (date("Y", strtotime($endDate)) != date("Y", strtotime($startDate))) {
+      CRM_Core_Session::setStatus('Selected Date must be in the same year', ts('Date range incorrect'), 'warning', array('expires' => 5000));
+      return;
+    }
 
-    $inList = '1=1';
+    if ($endDate == null || $startDate == null) {
+      CRM_Core_Session::setStatus('Please select date range', ts('Date range incorrect'), 'warning', array('expires' => 5000));
+      return;
+    }
+
+    $wword = '1=1';
 
     if ($startDate != null && $endDate != null) {
       if ($includePrevious == 0) {
-        $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL) AND trxn.trxn_date >= '$startDate' AND trxn.trxn_date <= '$endDate'";
+        $wword .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL) AND trxn.trxn_date >= '$startDate' AND trxn.trxn_date <= '$endDate'";
       } else {
-        $inList .= " AND trxn.trxn_date >= '$startDate' AND trxn.trxn_date <= '$endDate'";
+        $wword .= " AND trxn.trxn_date >= '$startDate' AND trxn.trxn_date <= '$endDate'";
       }
     } else {
-      $inList .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL)";
+      $wword .= " AND trxn.id NOT IN (SELECT ci.financial_trxn_id FROM civicrm_o8_iras_donation ci WHERE ci.created_date IS NOT NULL)";
     }
 
     $sql = "SELECT 
@@ -94,7 +99,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
       INNER JOIN civicrm_contribution contrib ON contrib.trxn_id = trxn.trxn_id  
       INNER JOIN civicrm_contact cont ON cont.id = contrib.contact_id 
       INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id   
-      WHERE $inList
+      WHERE $wword
       AND trxn.status_id = 1 AND fintype.is_deductible = 1
       AND cont.external_identifier IS NOT NULL 
       LIMIT 5000";
@@ -127,7 +132,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     array_push($csvData, $dataBottom);
     
     //return 0;
-    if (sizeof($saveReport) > 0) {
+    if (count($saveReport) > 0) {
       $log_id = 0;
 
       $insert = "INSERT INTO civicrm_o8_iras_response_log(response_code, created_date) VALUES (10, '$genDate');";

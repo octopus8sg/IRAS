@@ -1,14 +1,18 @@
 CRM.$(function ($) {
 
     var transactions_ajax_url = CRM.vars.source_url['transactions_ajax_url'];
-    var offline_url = '';
+    var request_url = '';
     var filename = '';
+    var checkResponse = false;
+    
     (function (open) {
         XMLHttpRequest.prototype.open = function (m, u, a, us, p) {
             this.addEventListener('readystatechange', function (event) {
-                if (this.responseURL.includes(offline_url + '&snippet=json')) {
+                if (this.responseURL.includes(request_url + '&snippet=json') && checkResponse) {
+
                     const _filename = this.getResponseHeader('Content-Disposition')?.split("filename=")[1]?.split(';')[0].replaceAll('"', '');
                     const contentType = this.getResponseHeader('Content-Type');
+
                     if (filename !== _filename && contentType === 'application/csv' && this.responseText.length > 0) {
                         var csvElement = document.createElement('a');
                         csvElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(this.responseText);
@@ -17,6 +21,9 @@ CRM.$(function ($) {
                         filename = _filename;
                         csvElement.click();
                     }
+                    var hm_tab = $('.transactions');
+                    var hm_table = hm_tab.DataTable();
+                    hm_table.draw();
                 }
             }, false);
             open.call(this, m, u, a, us, p);
@@ -30,9 +37,10 @@ CRM.$(function ($) {
             var href = $(this).attr('href');
             var $el = CRM.loadForm(href, {
                 dialog: { width: '50%', height: '50%' }
-            }).on('crmFormSubmit', function (event, data) {
+            }).on('crmFormSubmit', function () {
                 filename = '';
-                offline_url = href;
+                request_url = href;
+                checkResponse = true;
                 $el.dialog('close');
             });
         });
@@ -43,9 +51,9 @@ CRM.$(function ($) {
             var $el = CRM.loadForm(href, {
                 dialog: { width: '50%', height: '50%' }
             }).on('crmFormSuccess', function () {
-                var hm_tab = $('.transactions');
-                var hm_table = hm_tab.DataTable();
-                hm_table.draw();
+                filename = '';
+                request_url = href;
+                checkResponse = true;
             });
         });
 
@@ -101,8 +109,6 @@ CRM.$(function ($) {
         var new_transactions_table = transactions_tab.DataTable(transactions_dtsettings);
         //End Reset Table
         $('.transactions-filter :input').change(function () {
-            console.log('changed')
-
             new_transactions_table.draw();
         });
 

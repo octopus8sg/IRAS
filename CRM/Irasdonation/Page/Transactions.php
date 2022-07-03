@@ -158,6 +158,12 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
     $rows = array();
     $count = 0;
     while ($result->fetch()) {
+      $sentMessage = '';
+      $servResp = json_decode($result->response_body);
+      $sentMessage .= $servResp->info->message;
+      if($servResp->info->fieldInfoList != null)
+      $sentMessage .= ' > ' . json_encode($servResp->info->fieldInfoList);
+
       $rows[$count][] = $result->trxn_id;
       $rows[$count][] = $result->trxn_date;
       $rows[$count][] = $result->total_amount;
@@ -166,14 +172,14 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
       $rows[$count][] = $result->created_date;
       $rows[$count][] = $result->sent_method;
       $rows[$count][] = $result->sent_response;
-      $rows[$count][] = $result->response_body;
+      $rows[$count][] = $sentMessage;
       $count++;
     }
 
     $searchRows = $rows;
     $iTotal = 0;
     if (is_countable($searchRows)) {
-      $iTotal = sizeof($searchRows);
+      $iTotal = count($searchRows);
     }
 
     $hmdatas = [
