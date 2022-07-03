@@ -65,10 +65,10 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
       return;
     }
 
-    if ($endDate == null || $startDate == null) {
-      CRM_Core_Session::setStatus('Please select date range', ts('Date range incorrect'), 'warning', array('expires' => 5000));
-      return;
-    }
+    // if ($endDate == null || $startDate == null) {
+    //   CRM_Core_Session::setStatus('Please select date range', ts('Date range incorrect'), 'warning', array('expires' => 5000));
+    //   return;
+    // }
 
     $inList = '1=1';
 
@@ -125,9 +125,8 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     //generate buttom line of the report
     $dataBottom = [2, $incer, $total, null, null, null, null, null, null, null, null, null, null, null];
     array_push($csvData, $dataBottom);
-    // CRM_Core_Session::setStatus('Please configure extension before using', ts('Extension configuration'), 'warning', array('expires' => 5000));
-    // return;
-
+    
+    //return 0;
     if (sizeof($saveReport) > 0) {
       $log_id = 0;
 
@@ -145,24 +144,30 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
       }
     }
 
-    if (count($dataBody) > 0) $this->generateCsv($csvData);
+    if (count($dataBody) > 0) {
+      CRM_Core_Session::setStatus('Please wait generating file', ts('File Generation'), 'warning', array('expires' => 5000));
+      $this->generateCsv($csvData);
+    }
     else CRM_Core_Session::setStatus('No any data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
-
+    
     parent::postProcess();
   }
 
   function generateCsv($csvData)
   {
-    $f = fopen('php://memory', 'w');
-    ob_clean();
-    ob_start();
+    $f = fopen('php://output', 'w');
+
     foreach ($csvData as $row) {
       fputcsv($f, $row, ",", '\'', "\\");
     }
-    fseek($f, 0);
+    // fseek($f, 0);
+
     header('Content-Type: application/csv');
     header('Content-Disposition: attachment; filename="report_' . date('dmY_His') . '.csv";');
-    fpassthru($f);
+    fclose($f);
+    // $file = fpassthru($f);
+    CRM_Core_Session::setStatus('File generated successfully', ts('File Generation'), 'success', array('expires' => 5000));
+
     exit();
   }
 
@@ -173,10 +178,6 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
    */
   public function getRenderableElementNames()
   {
-    // The _elements list includes some items which should not be
-    // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
-    // items don't have labels.  We'll identify renderable by filtering on
-    // the 'label'.
     $elementNames = array();
     foreach ($this->_elements as $element) {
       /** @var HTML_QuickForm_Element $element */

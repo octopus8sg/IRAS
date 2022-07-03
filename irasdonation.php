@@ -132,5 +132,25 @@ function irasdonation_civicrm_navigationMenu(&$menu)
     'is_active' => 1
   ]);
 
+  _irasdonation_civix_insert_navigation_menu($menu, 'iras_donation', [
+    'label' => E::ts('Offline report'),
+    'name' => 'iras_donation_report',
+    'url' => 'civicrm/irasdonation/iras_offline_report',
+    'permission' => 'adminster CiviCRM',
+    'operator' => 'OR',
+    //'separator' => 1,
+    'is_active' => 1
+  ]);
+  
+  _irasdonation_civix_insert_navigation_menu($menu, 'iras_donation', [
+    'label' => E::ts('Online report'),
+    'name' => 'iras_donation_report',
+    'url' => 'civicrm/irasdonation/iras_online_report',
+    'permission' => 'adminster CiviCRM',
+    'operator' => 'OR',
+    //'separator' => 1,
+    'is_active' => 1
+  ]);  
+
   _irasdonation_civix_navigationMenu($menu);
 }
