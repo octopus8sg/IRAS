@@ -2,6 +2,7 @@
 
 use Civi\Api4\IrasDonation;
 use CRM_Irasdonation_ExtensionUtil as E;
+use CRM_Irasdonation_Utils as U;
 
 /**
  * Form controller class
@@ -10,169 +11,161 @@ use CRM_Irasdonation_ExtensionUtil as E;
  */
 class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
 {
-  public function buildQuickForm()
-  {
+    public function buildQuickForm()
+    {
 
-    $sql =  "SELECT * FROM civicrm_o8_iras_config ic";
-    $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
+        $this->add('checkbox', U::SAVE_LOG['slug'], U::SAVE_LOG['name']);
+        $this->add('text', U::CLIENT_ID['slug'], U::CLIENT_ID['name']);
+        $this->add('text', U::CLIENT_SECRET['slug'], U::CLIENT_SECRET['name']);
 
-    $params = array();
-    while ($result->fetch()) {
-      $params[$result->param_name] = $result->param_value;
+        $types = U::TYPES;
+        $this->add(
+            'select', // field type
+            U::ORGANIZATION_TYPE['slug'], // field name
+            U::ORGANIZATION_TYPE['name'], // field label
+            $types, // list of options
+            TRUE // is required
+        );
+
+        $this->add('text', U::ORGANISATION_ID['slug'], U::ORGANISATION_ID['name'], null, TRUE);
+        $this->add('text', U::ORGANISATION_NAME['slug'], U::ORGANISATION_NAME['name'], null, TRUE);
+        $this->add('text', U::AUTHORISED_PERSON_ID['slug'], U::AUTHORISED_PERSON_ID['name']);
+        $this->add('text', U::AUTHORISED_PERSON_NAME['slug'], U::AUTHORISED_PERSON_NAME['name']);
+        $this->add('text', U::AUTHORISED_PERSON_DESIGNATION['slug'], U::AUTHORISED_PERSON_DESIGNATION['name']);
+        $this->add('text', U::AUTHORISED_PERSON_PHONE['slug'], U::AUTHORISED_PERSON_PHONE['name']);
+        $this->add('text', U::AUTHORISED_PERSON_EMAIL['slug'], U::AUTHORISED_PERSON_EMAIL['name']);
+        $this->add('text', U::REPORT_URL['slug'], U::REPORT_URL['name']);
+        $this->add('text', U::MIN_AMOUNT['slug'], U::MIN_AMOUNT['name']);
+
+        $this->addButtons(array(
+            array(
+                'type' => 'submit',
+                'name' => E::ts('Save configuration'),
+                'isDefault' => TRUE,
+            ),
+        ));
+
+        // export form elements
+        $this->assign('elementNames', $this->getRenderableElementNames());
+        parent::buildQuickForm();
     }
 
-    $this->add('text', 'client_id', ts('Client Id'), ['value' => $params['client_id']]);
-    $this->add('text', 'client_secret', ts('Client secret'), ['value' => $params['client_secret']]);
+    public function setDefaultValues()
+    {
+        $defaults = [];
+        $settings = CRM_Core_BAO_Setting::getItem(U::SETTINGS_NAME, U::SETTINGS_SLUG);
+        U::writeLog($settings, "starting values");
+        if (!empty($settings)) {
+            $defaults = $settings;
+        }
 
-    $types = array(
-      '5' => E::ts('UEN-BUSINESS'),
-      '6' => E::ts('UEN-LOCAL CO'),
-      'U' => E::ts('UEN-OTHERS'),
-      'A' => E::ts('ASGD'),
-      'I' => E::ts('ITR')
-    );
-
-    $orgTypes = array(
-      $params['organization_type'] => $types[$params['organization_type']],
-      '5' => E::ts('UEN-BUSINESS'),
-      '6' => E::ts('UEN-LOCAL CO'),
-      'U' => E::ts('UEN-OTHERS'),
-      'A' => E::ts('ASGD'),
-      'I' => E::ts('ITR')
-    );
-
-    $this->add(
-      'select', // field type
-      'organization_type', // field name
-      'Organization type*', // field label
-      $orgTypes, // list of options
-      FALSE // is required
-    );
-
-    $this->add('text', 'organisation_id', ts('Organization ID/UEN*'), ['value' => $params['organisation_id']]);
-    $this->add('text', 'organisation_name', ts('Organization name*'), ['value' => $params['organisation_name']]);
-    $this->add('text', 'authorised_person_id', ts('Authorized User ID(SingpassID)'), ['value' => $params['authorised_person_id']]);
-    $this->add('text', 'authorised_person_name', ts('Authorized user full name'), ['value' => $params['authorised_person_name']]);
-    $this->add('text', 'authorised_person_designation', ts('Authorized user designation'), ['value' => $params['authorised_person_designation']]);
-    $this->add('text', 'authorised_person_phone', ts('Phone number'), ['value' => $params['authorised_person_phone']]);
-    $this->add('text', 'authorised_person_email', ts('Authorized user email'), ['value' => $params['authorised_person_email']]);
-    $this->add('text', 'report_url', ts('Report url'), ['value' => $params['report_url']]);
-    $this->add('text', 'min_amount', ts('Minimum amount($)'), ['value' => $params['min_amount']]);
-
-    $this->addButtons(array(
-      array(
-        'type' => 'submit',
-        'name' => E::ts('Save configuration'),
-        'isDefault' => TRUE,
-      ),
-    ));
-
-    // export form elements
-    $this->assign('elementNames', $this->getRenderableElementNames());
-    parent::buildQuickForm();
-  }
-
-  public function postProcess()
-  {
-    $postedVals = array(
-      'client_id' => null,
-      'client_secret' => null,
-      'organization_type' => null,
-      'organisation_id' => null,
-      'organisation_name' => null,
-      'authorised_person_id' => null,
-      'authorised_person_name' => null,
-      'authorised_person_designation' => null,
-      'authorised_person_phone' => null,
-      'authorised_person_email' => null,
-      'report_url' => null,
-      'min_amount' => null
-    );
-
-    $values = $this->exportValues();
-    $postedVals['client_id'] = $values['client_id'];
-    $postedVals['client_secret'] = $values['client_secret'];
-    $postedVals['organization_type'] = $values['organization_type'];
-    $postedVals['organisation_id'] = $values['organisation_id'];
-    $postedVals['organisation_name'] = $values['organisation_name'];
-    $postedVals['authorised_person_id'] = $values['authorised_person_id'];
-    $postedVals['authorised_person_name'] = $values['authorised_person_name'];
-    $postedVals['authorised_person_designation'] = $values['authorised_person_designation'];
-    $postedVals['authorised_person_phone'] = $values['authorised_person_phone'];
-    $postedVals['authorised_person_email'] = $values['authorised_person_email'];
-    $postedVals['report_url'] = $values['report_url'];
-    $postedVals['min_amount'] = $values['min_amount'];
-
-    $checkFields = array("organisation_id"=>"Organization ID/UEN", "organization_type"=>"Organization type", "organisation_name"=>"Organization name");
-    
-    foreach ($postedVals as $key => $value) {
-      if (in_array($key, array_keys($checkFields)) && $value == null) {
-        CRM_Core_Session::setStatus("\"".$checkFields[$key]."\" field is required", ts('Empty field'), 'warning', array('expires' => 5000));
-        return;
-      }
+        return $defaults;
     }
 
-    if ($this->parsUENNumber($postedVals['organisation_id']) == 0) {
-      CRM_Core_Session::setStatus('Incorrect organization ID(UEN)', ts('Incorrect UEN'), 'warning', array('expires' => 5000));
-      return;
+    public function postProcess()
+    {
+        $postedVals = array(
+            U::SAVE_LOG['slug'] => 1,
+            U::CLIENT_ID['slug'] => null,
+            U::CLIENT_SECRET['slug'] => null,
+            U::ORGANIZATION_TYPE['slug'] => null,
+            U::ORGANISATION_ID['slug'] => null,
+            U::ORGANISATION_NAME['slug'] => null,
+            U::AUTHORISED_PERSON_ID['slug'] => null,
+            U::AUTHORISED_PERSON_NAME['slug'] => null,
+            U::AUTHORISED_PERSON_DESIGNATION['slug'] => null,
+            U::AUTHORISED_PERSON_PHONE['slug'] => null,
+            U::AUTHORISED_PERSON_EMAIL['slug'] => null,
+            U::REPORT_URL['slug'] => null,
+            U::MIN_AMOUNT['slug'] => null
+        );
+
+        $values = $this->exportValues();
+        $postedVals[U::SAVE_LOG['slug']] = $values[U::SAVE_LOG['slug']];
+        $postedVals[U::CLIENT_ID['slug']] = $values[U::CLIENT_ID['slug']];
+        $postedVals[U::CLIENT_SECRET['slug']] = $values[U::CLIENT_SECRET['slug']];
+        $postedVals[U::ORGANIZATION_TYPE['slug']] = $values[U::ORGANIZATION_TYPE['slug']];
+        $postedVals[U::ORGANISATION_ID['slug']] = $values[U::ORGANISATION_ID['slug']];
+        $postedVals[U::ORGANISATION_NAME['slug']] = $values[U::ORGANISATION_NAME['slug']];
+        $postedVals[U::AUTHORISED_PERSON_ID['slug']] = $values[U::AUTHORISED_PERSON_ID['slug']];
+        $postedVals[U::AUTHORISED_PERSON_NAME['slug']] = $values[U::AUTHORISED_PERSON_NAME['slug']];
+        $postedVals[U::AUTHORISED_PERSON_DESIGNATION['slug']] = $values[U::AUTHORISED_PERSON_DESIGNATION['slug']];
+        $postedVals[U::AUTHORISED_PERSON_PHONE['slug']] = $values[U::AUTHORISED_PERSON_PHONE['slug']];
+        $postedVals[U::AUTHORISED_PERSON_EMAIL['slug']] = $values[U::AUTHORISED_PERSON_EMAIL['slug']];
+        $postedVals[U::REPORT_URL['slug']] = $values[U::REPORT_URL['slug']];
+        $postedVals[U::MIN_AMOUNT['slug']] = $values[U::MIN_AMOUNT['slug']];
+
+        $checkFields = array(
+            U::ORGANISATION_ID['slug'] => U::ORGANISATION_ID['name'],
+            U::ORGANIZATION_TYPE['slug'] => U::ORGANIZATION_TYPE['name'],
+            U::ORGANISATION_NAME['slug'] => U::ORGANISATION_NAME['name']);
+
+        foreach ($postedVals as $key => $value) {
+            if (in_array($key, array_keys($checkFields)) && $value == null) {
+                CRM_Core_Session::setStatus("\"" . $checkFields[$key] . "\" field is required", ts('Empty field'), 'warning', array('expires' => 5000));
+                return;
+            }
+        }
+
+        if ($this->parsUENNumber($postedVals[U::ORGANISATION_ID['slug']]) == 0) {
+            CRM_Core_Session::setStatus('Incorrect organization ID(UEN)', ts('Incorrect UEN'), 'warning', array('expires' => 5000));
+            return;
+        }
+        //if all is ok clear parametrs
+        $sql = "TRUNCATE TABLE civicrm_o8_iras_config";
+        CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
+
+        $s = CRM_Core_BAO_Setting::setItem($postedVals, U::SETTINGS_NAME, U::SETTINGS_SLUG);
+        U::writeLog($s);
+
+        CRM_Core_Session::setStatus('Configuration saved successfully', ts('Success'), 'success', array('expires' => 5000));
+
+        parent::postProcess();
     }
-    //if all is ok clear parametrs
-    $sql =  "TRUNCATE TABLE civicrm_o8_iras_config";
-    CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
 
-    foreach ($postedVals as $key => $value) {
-      $sql =  "INSERT INTO civicrm_o8_iras_config(param_name, param_value) VALUES('$key', '$value')";
-      CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
+    function parsUENNumber($uen)
+    {
+        $idTypes = ["nric" => 1, "fin" => 2, "uenb" => 5, "uenl" => 6, "asgd" => 8, "itr" => 10, "ueno" => 35];
+        if ($uen == null) return 0;
+        switch ($uen) {
+            case ($uen[0] == 'S' || $uen[0] == 'T') && is_numeric(substr($uen, 1, 7)):
+                return $idTypes['nric'];
+            case ($uen[0] == 'F' || $uen[0] == 'G') && is_numeric(substr($uen, 1, 7)):
+                return $idTypes['fin'];
+            case (strlen($uen) < 10 && is_numeric(substr($uen, 0, 8))):
+                return $idTypes['uenb'];
+            case (((int)substr($uen, 0, 4)) >= 1800 && ((int)substr($uen, 0, 4)) <= date("Y")) && is_numeric(substr($uen, 4, 5)):
+                return $idTypes['uenl'];
+            case ($uen[0] == 'A' && is_numeric(substr($uen, 1, 7))):
+                return $idTypes['asgd'];
+            case (is_numeric(substr($uen, 0, 9))):
+                return $idTypes['itr'];
+            case (($uen[0] == 'T' || $uen[0] == 'S' || $uen[0] == 'R') && is_numeric(substr($uen, 1, 2)) && !is_numeric(substr($uen, 3, 2)) && is_numeric(substr($uen, 5, 4))):
+                return $idTypes['ueno'];
+            default:
+                return 0;
+        }
     }
 
-    CRM_Core_Session::setStatus('Configuration saved successfully', ts('Success'), 'success', array('expires' => 5000));
-
-    parent::postProcess();
-  }
-
-  function parsUENNumber($uen)
-  {
-    $idTypes = ["nric" => 1, "fin" => 2, "uenb" => 5, "uenl" => 6, "asgd" => 8, "itr" => 10, "ueno" => 35];
-    if ($uen == null) return 0;
-    switch ($uen) {
-      case ($uen[0] == 'S' || $uen[0] == 'T') && is_numeric(substr($uen, 1, 7)):
-        return $idTypes['nric'];
-      case ($uen[0] == 'F' || $uen[0] == 'G') && is_numeric(substr($uen, 1, 7)):
-        return $idTypes['fin'];
-      case (strlen($uen) < 10 && is_numeric(substr($uen, 0, 8))):
-        return $idTypes['uenb'];
-      case (((int)substr($uen, 0, 4)) >= 1800 && ((int)substr($uen, 0, 4)) <= date("Y")) && is_numeric(substr($uen, 4, 5)):
-        return $idTypes['uenl'];
-      case ($uen[0] == 'A' && is_numeric(substr($uen, 1, 7))):
-        return $idTypes['asgd'];
-      case (is_numeric(substr($uen, 0, 9))):
-        return $idTypes['itr'];
-      case (($uen[0] == 'T' || $uen[0] == 'S' || $uen[0] == 'R') && is_numeric(substr($uen, 1, 2)) && !is_numeric(substr($uen, 3, 2)) && is_numeric(substr($uen, 5, 4))):
-        return $idTypes['ueno'];
-      default:
-        return 0;
+    /**
+     * Get the fields/elements defined in this form.
+     *
+     * @return array (string)
+     */
+    public function getRenderableElementNames()
+    {
+        // The _elements list includes some items which should not be
+        // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
+        // items don't have labels.  We'll identify renderable by filtering on
+        // the 'label'.
+        $elementNames = array();
+        foreach ($this->_elements as $element) {
+            /** @var HTML_QuickForm_Element $element */
+            $label = $element->getLabel();
+            if (!empty($label)) {
+                $elementNames[] = $element->getName();
+            }
+        }
+        return $elementNames;
     }
-  }
-
-  /**
-   * Get the fields/elements defined in this form.
-   *
-   * @return array (string)
-   */
-  public function getRenderableElementNames()
-  {
-    // The _elements list includes some items which should not be
-    // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
-    // items don't have labels.  We'll identify renderable by filtering on
-    // the 'label'.
-    $elementNames = array();
-    foreach ($this->_elements as $element) {
-      /** @var HTML_QuickForm_Element $element */
-      $label = $element->getLabel();
-      if (!empty($label)) {
-        $elementNames[] = $element->getName();
-      }
-    }
-    return $elementNames;
-  }
 }

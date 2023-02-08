@@ -6,24 +6,29 @@ use \Firebase\JWT\JWT;
 
 class CRM_Irasdonation_Utils
 {
-    public const SAVE_LOG = 'save_log';
-    public const SEND_CONTACT = 'send_contact';
-    public const SEND_CONTRIBUTION = 'send_contribution';
-    public const USER_TYPES = 'user_types';
-    public const REFRESH_TOKEN = 'refresh_token';
-    public const REDIRECT_URI = 'redirect_uri';
-    public const CLIENT_SECRET = 'client_secret';
-    public const CLIENT_ID = 'client_id';
-    public const SETTINGS_NAME = "Dmszoho Settings";
-    public const SETTINGS_SLUG = 'dmszoho_settings';
-    public const ZOHO_CONTACT_CUSTOM_GROUP = 'Zoho contact fields';
-    public const ZOHO_CONTRIBUTION_CUSTOM_GROUP = 'Zoho contribution fields';
-    public const ZOHO_RECIEPT_ID = 'Zoho Reciept ID';
-    public const SEND_CONTRIBUTION_TO_ZOHO = 'Send Contribution to Zoho';
-    public const ZOHO_CONTACT_ID = 'Zoho Contact ID';
-    public const ZOHO_CONTACT_PERSON_ID = 'Zoho Contact Person ID';
-    public const SEND_CONTACT_TO_ZOHO = 'Send Contact to Zoho';
-//'Zoho Reciept ID', 'Send Contribution to Zoho'
+    public const SAVE_LOG = ['slug' => 'save_log', 'name' => 'Save Log'];
+    public const SETTINGS_NAME = "IRAS Settings";
+    public const SETTINGS_SLUG = 'iras_settings';
+    public const CLIENT_ID = ['slug' => 'client_id', 'name' => 'Client ID'];
+    public const CLIENT_SECRET = ['slug' => 'client_secret', 'name' => 'Client Secret'];
+    public const ORGANIZATION_TYPE = ['slug' => 'organization_type', 'name' => 'Organization type*'];
+    public const ORGANISATION_ID = ['slug' => 'organisation_id', 'name' => 'Organization ID/UEN*'];
+    public const ORGANISATION_NAME = ['slug' => 'organisation_name', 'name' => 'Organization name*'];
+    public const AUTHORISED_PERSON_ID = ['slug' => 'authorised_person_id', 'name' => 'Authorized User ID(SingpassID)'];
+    public const AUTHORISED_PERSON_NAME = ['slug' => 'authorised_person_name', 'name' => 'Authorized user full name'];
+    public const AUTHORISED_PERSON_DESIGNATION = ['slug' => 'authorised_person_designation', 'name' => 'Authorized user designation'];
+    public const AUTHORISED_PERSON_PHONE = ['slug' => 'authorised_person_phone', 'name' => 'Phone number'];
+    public const AUTHORISED_PERSON_EMAIL = ['slug' => 'authorised_person_email', 'name' => 'Authorized user email'];
+    public const REPORT_URL = ['slug' => 'report_url', 'name' => 'Report url'];
+    public const MIN_AMOUNT = ['slug' => 'min_amount', 'name' => 'Minimum amount($)'];
+    public const TYPES = array(
+        '5' => 'UEN-BUSINESS',
+        '6' => 'UEN-LOCAL CO',
+        'U' => 'UEN-OTHERS',
+        'A' => 'ASGD',
+        'I' => 'ITR'
+    );
+
 
     /**
      * @param $input
@@ -64,7 +69,7 @@ class CRM_Irasdonation_Utils
     {
         $result = false;
         try {
-            $result_ = self::getDnszohoSettings(self::SAVE_LOG);
+            $result_ = self::getSettings(self::SAVE_LOG['slug']);
             if ($result_ == 1) {
                 $result = true;
             }
@@ -83,7 +88,7 @@ class CRM_Irasdonation_Utils
     {
         $result = false;
         try {
-            $result_ = self::getDnszohoSettings(self::SEND_CONTACT);
+            $result_ = self::getSettings(self::SEND_CONTACT);
             if ($result_ == 1) {
                 $result = true;
             }
@@ -102,7 +107,7 @@ class CRM_Irasdonation_Utils
     {
         $result = false;
         try {
-            $result_ = self::getDnszohoSettings(self::SEND_CONTRIBUTION);
+            $result_ = self::getSettings(self::SEND_CONTRIBUTION);
             if ($result_ == 1) {
                 $result = true;
             }
@@ -123,7 +128,7 @@ class CRM_Irasdonation_Utils
     {
         $result = "";
         try {
-            $result = strval(self::getDnszohoSettings(self::REFRESH_TOKEN));
+            $result = strval(self::getSettings(self::REFRESH_TOKEN));
 //            self::writeLog($result, 'getValidateUEN');
             return $result;
         } catch (\Exception $exception) {
@@ -137,7 +142,7 @@ class CRM_Irasdonation_Utils
     {
         $result = "";
         try {
-            $result = strval(self::getDnszohoSettings(self::CLIENT_ID));
+            $result = strval(self::getSettings(self::CLIENT_ID));
 //            self::writeLog($result, 'getValidateUEN');
             return $result;
         } catch (\Exception $exception) {
@@ -151,7 +156,7 @@ class CRM_Irasdonation_Utils
     {
         $result = "";
         try {
-            $result = strval(self::getDnszohoSettings(self::CLIENT_SECRET));
+            $result = strval(self::getSettings(self::CLIENT_SECRET));
 //            self::writeLog($result, 'getValidateUEN');
             return $result;
         } catch (\Exception $exception) {
@@ -165,7 +170,7 @@ class CRM_Irasdonation_Utils
     {
         $result = "";
         try {
-            $result = strval(self::getDnszohoSettings(self::REDIRECT_URI));
+            $result = strval(self::getSettings(self::REDIRECT_URI));
 //            self::writeLog($result, 'getValidateUEN');
             return $result;
         } catch (\Exception $exception) {
@@ -504,7 +509,7 @@ class CRM_Irasdonation_Utils
     /**
      * @return mixed
      */
-    protected static function getDnszohoSettings($setting = null)
+    protected static function getSettings($setting = null)
     {
         $simple_settings = CRM_Core_BAO_Setting::getItem(self::SETTINGS_NAME, self::SETTINGS_SLUG);
         if ($setting === null) {
