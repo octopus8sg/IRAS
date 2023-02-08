@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/irasdonation/iras_offline_report</path>
+    <page_callback>CRM_Irasdonation_Form_IrasOfflineReport</page_callback>
+    <title>Offline data generation</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/irasdonation/iras_online_report</path>
+    <page_callback>CRM_Irasdonation_Form_IrasOnlineReport</page_callback>
+    <title>Online data generation</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/irasdonation/irasconfiguration</path>
+    <page_callback>CRM_Irasdonation_Form_IrasConfiguration</page_callback>
+    <title>IRAS Configuration</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/irasdonation/transactions</path>
+    <page_callback>CRM_Irasdonation_Page_Transactions</page_callback>
+    <title>IRAS Transactions</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/irasdonation/transactions_ajax</path>
+    <page_callback>CRM_Irasdonation_Page_Transactions::getAjax</page_callback>
+    <title>IRAS Transactions</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/irasdonation/transactions_filter</path>
+    <page_callback>CRM_Irasdonation_Form_TransactionsFilter</page_callback>
+    <title>TransactionsFilter</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>

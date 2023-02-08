@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<table>
+  <base>CRM/Irasdonation</base>
+  <class>IrasDonation</class>
+  <name>civicrm_o8_iras_donation</name>
+  <comment>IRAS Donation Reporting tool</comment>
+  <log>true</log>
+
+  <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique ID</comment>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+
+  <field>
+    <name>cdntaxreceipts_log_id</name>
+    <type>int</type>
+    <unique>TRUE</unique>
+    <comment>FK to Contact</comment>
+  </field>
+  <foreignKey>
+    <name>cdntaxreceipts_log_id</name>
+    <table>cdntaxreceipts_log</table>
+    <key>id</key>
+    <onDelete>CASCADE</onDelete>
+  </foreignKey>
+
+  <field>
+    <name>is_api</name>
+    <type>boolean</type>
+    <comment>api or offline report</comment>
+  </field>  
+
+  <field>
+    <name>comment</name>
+    <type>text</type>
+    <required>false</required>
+    <comment>comment to sending item</comment>
+    <html>
+      <type>Comment</type>
+    </html>
+  </field>
+
+  <field>
+    <name>log_id</name>
+    <type>int unsigned</type>
+    <required>false</required>
+    <unique>false</unique>
+    <comment>FK to Contact Response log</comment>
+  </field>
+
+  <field>
+    <name>created_date</name>
+    <type>datetime</type>
+    <comment>Created date</comment>
+  </field>
+
+</table>

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<extension key="com.octopus8.iras" type="module">
+  <file>irasdonation</file>
+  <name>Octopus 8 IRAS Donation</name>
+  <description>IRAS Donation reporting tool</description>
+  <license>AGPL-3.0</license>
+  <maintainer>
+    <author>Asliddin Oripov, Khindol Madraimov</author>
+    <email>khindol@octopus8.com</email>
+  </maintainer>
+  <urls>
+    <url desc="Main Extension Page">https://octopus8.com</url>
+    <url desc="Documentation">https://octopus8.com</url>
+    <url desc="Support">https://octopus8.com</url>
+    <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
+  </urls>
+  <releaseDate>2022-09-05</releaseDate>
+  <version>2.0.9</version>
+  <develStage>alpha</develStage>
+  <compatibility>
+    <ver>5.0</ver>
+  </compatibility>
+  <comments>updated report genertion tables for CDN TAX extension</comments>
+  <classloader>
+    <psr4 prefix="Civi\" path="Civi"/>
+  </classloader>
+  <requires>
+    <ext>org.civicrm.cdntaxreceipts</ext>
+  </requires>
+  <civix>
+    <namespace>CRM/Irasdonation</namespace>
+    <format>22.05.2</format>
+    <angularModule>crmIrasdonation</angularModule>
+  </civix>
+  <mixins>
+    <mixin>mgd-php@1.0.0</mixin>
+    <mixin>setting-php@1.0.0</mixin>
+    <mixin>menu-xml@1.0.0</mixin>
+  </mixins>
+</extension>
