@@ -121,7 +121,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     while ($result->fetch()) {
 
       $config = new CRM_Irasdonation_Form_IrasConfiguration();
-      $idType = $config->parsUENNumber($result->external_identifier);
+      $idType = CRM_Irasdonation_Utils::parsUENNumber($result->external_identifier);
       if ($idType > 0) {
         $dataBody = [1, $idType, $result->external_identifier, str_replace(',', '', $result->sort_name), null, null, null, null, null, $result->receipt_amount, date("Ymd", strtotime($result->issued_on)), $result->receipt_no, 'O', 'Z'];
         array_push($saveReport, $result->id);

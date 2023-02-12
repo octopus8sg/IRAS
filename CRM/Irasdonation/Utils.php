@@ -11,9 +11,11 @@ class CRM_Irasdonation_Utils
     public const SETTINGS_SLUG = 'iras_settings';
     public const CLIENT_ID = ['slug' => 'client_id', 'name' => 'Client ID'];
     public const CLIENT_SECRET = ['slug' => 'client_secret', 'name' => 'Client Secret'];
-    public const ORGANIZATION_TYPE = ['slug' => 'organization_type', 'name' => 'Organization type*'];
-    public const ORGANISATION_ID = ['slug' => 'organisation_id', 'name' => 'Organization ID/UEN*'];
-    public const ORGANISATION_NAME = ['slug' => 'organisation_name', 'name' => 'Organization name*'];
+    public const RECIEPT_ID = ['slug' => 'reciept_id', 'name' => 'Reciept ID Custom Field'];
+    public const RECIEPT_DATE = ['slug' => 'reciept_date', 'name' => 'Reciept Date Custom Field'];
+    public const ORGANIZATION_TYPE = ['slug' => 'organization_type', 'name' => 'Organization type'];
+    public const ORGANISATION_ID = ['slug' => 'organisation_id', 'name' => 'Organization ID/UEN'];
+    public const ORGANISATION_NAME = ['slug' => 'organisation_name', 'name' => 'Organization name'];
     public const AUTHORISED_PERSON_ID = ['slug' => 'authorised_person_id', 'name' => 'Authorized User ID(SingpassID)'];
     public const AUTHORISED_PERSON_NAME = ['slug' => 'authorised_person_name', 'name' => 'Authorized user full name'];
     public const AUTHORISED_PERSON_DESIGNATION = ['slug' => 'authorised_person_designation', 'name' => 'Authorized user designation'];
@@ -34,7 +36,7 @@ class CRM_Irasdonation_Utils
      * @param $input
      * @param $preffix_log
      */
-    public static function writeLog($input, $preffix_log = "Dmszoho Log")
+    public static function writeLog($input, $preffix_log = "Iras Log")
     {
         try {
             if (self::getSaveLog()) {
@@ -81,68 +83,68 @@ class CRM_Irasdonation_Utils
         }
     }
 
-    /**
-     * @return bool
-     */
-    public static function getSendContact(): bool
-    {
-        $result = false;
-        try {
-            $result_ = self::getSettings(self::SEND_CONTACT);
-            if ($result_ == 1) {
-                $result = true;
-            }
-            return $result;
-        } catch (\Exception $exception) {
-            $error_message = $exception->getMessage();
-            $error_title = 'Send Contact Config Required';
-            self::showErrorMessage($error_message, $error_title);
-        }
-    }
+//    /**
+//     * @return bool
+//     */
+//    public static function getSendContact(): bool
+//    {
+//        $result = false;
+//        try {
+//            $result_ = self::getSettings(self::SEND_CONTACT);
+//            if ($result_ == 1) {
+//                $result = true;
+//            }
+//            return $result;
+//        } catch (\Exception $exception) {
+//            $error_message = $exception->getMessage();
+//            $error_title = 'Send Contact Config Required';
+//            self::showErrorMessage($error_message, $error_title);
+//        }
+//    }
+//
+//    /**
+//     * @return bool
+//     */
+//    public static function getSendContribution(): bool
+//    {
+//        $result = false;
+//        try {
+//            $result_ = self::getSettings(self::SEND_CONTRIBUTION);
+//            if ($result_ == 1) {
+//                $result = true;
+//            }
+//            return $result;
+//        } catch (\Exception $exception) {
+//            $error_message = $exception->getMessage();
+//            $error_title = 'Send Contribution Config Required';
+//            self::showErrorMessage($error_message, $error_title);
+//        }
+//    }
 
-    /**
-     * @return bool
-     */
-    public static function getSendContribution(): bool
-    {
-        $result = false;
-        try {
-            $result_ = self::getSettings(self::SEND_CONTRIBUTION);
-            if ($result_ == 1) {
-                $result = true;
-            }
-            return $result;
-        } catch (\Exception $exception) {
-            $error_message = $exception->getMessage();
-            $error_title = 'Send Contribution Config Required';
-            self::showErrorMessage($error_message, $error_title);
-        }
-    }
 
-
-    /**
-     * @return string
-     */
-
-    public static function getRefreshToken(): string
-    {
-        $result = "";
-        try {
-            $result = strval(self::getSettings(self::REFRESH_TOKEN));
-//            self::writeLog($result, 'getValidateUEN');
-            return $result;
-        } catch (\Exception $exception) {
-            $error_message = $exception->getMessage();
-            $error_title = 'Write Log Config Required';
-            self::showErrorMessage($error_message, $error_title);
-        }
-    }
+//    /**
+//     * @return string
+//     */
+//
+//    public static function getRefreshToken(): string
+//    {
+//        $result = "";
+//        try {
+//            $result = strval(self::getSettings(self::REFRESH_TOKEN));
+////            self::writeLog($result, 'getValidateUEN');
+//            return $result;
+//        } catch (\Exception $exception) {
+//            $error_message = $exception->getMessage();
+//            $error_title = 'Write Log Config Required';
+//            self::showErrorMessage($error_message, $error_title);
+//        }
+//    }
 
     public static function getClientID(): string
     {
         $result = "";
         try {
-            $result = strval(self::getSettings(self::CLIENT_ID));
+            $result = strval(self::getSettings(self::CLIENT_ID['slug']));
 //            self::writeLog($result, 'getValidateUEN');
             return $result;
         } catch (\Exception $exception) {
@@ -152,53 +154,53 @@ class CRM_Irasdonation_Utils
         }
     }
 
-    public static function getClientSecret(): string
-    {
-        $result = "";
-        try {
-            $result = strval(self::getSettings(self::CLIENT_SECRET));
-//            self::writeLog($result, 'getValidateUEN');
-            return $result;
-        } catch (\Exception $exception) {
-            $error_message = $exception->getMessage();
-            $error_title = 'Write Log Config Required';
-            self::showErrorMessage($error_message, $error_title);
-        }
-    }
-
-    public static function getRedirectURI(): string
-    {
-        $result = "";
-        try {
-            $result = strval(self::getSettings(self::REDIRECT_URI));
-//            self::writeLog($result, 'getValidateUEN');
-            return $result;
-        } catch (\Exception $exception) {
-            $error_message = $exception->getMessage();
-            $error_title = 'Write Log Config Required';
-            self::showErrorMessage($error_message, $error_title);
-        }
-    }
-
-    public static function getAccessTokenURL(): string
-    {
-        $refresh_token = self::getRefreshToken();
-        $client_id = self::getClientID();
-        $client_secret = self::getClientSecret();
-        $redirect_uri = self::getRedirectURI();
-        if ($refresh_token == "") return "";
-        if ($client_id == "") return "";
-        if ($client_secret == "") return "";
-        if ($redirect_uri == "") return "";
-        $result = "https://accounts.zoho.com/oauth/v2/token?refresh_token=$refresh_token&client_id=$client_id&client_secret=$client_secret&redirect_uri=$redirect_uri&grant_type=refresh_token";
-        try {
-            return $result;
-        } catch (\Exception $exception) {
-            $error_message = $exception->getMessage();
-            $error_title = 'Write Log Config Required';
-            self::showErrorMessage($error_message, $error_title);
-        }
-    }
+//    public static function getClientSecret(): string
+//    {
+//        $result = "";
+//        try {
+//            $result = strval(self::getSettings(self::CLIENT_SECRET));
+////            self::writeLog($result, 'getValidateUEN');
+//            return $result;
+//        } catch (\Exception $exception) {
+//            $error_message = $exception->getMessage();
+//            $error_title = 'Write Log Config Required';
+//            self::showErrorMessage($error_message, $error_title);
+//        }
+//    }
+//
+//    public static function getRedirectURI(): string
+//    {
+//        $result = "";
+//        try {
+//            $result = strval(self::getSettings(self::REDIRECT_URI));
+////            self::writeLog($result, 'getValidateUEN');
+//            return $result;
+//        } catch (\Exception $exception) {
+//            $error_message = $exception->getMessage();
+//            $error_title = 'Write Log Config Required';
+//            self::showErrorMessage($error_message, $error_title);
+//        }
+//    }
+//
+//    public static function getAccessTokenURL(): string
+//    {
+//        $refresh_token = self::getRefreshToken();
+//        $client_id = self::getClientID();
+//        $client_secret = self::getClientSecret();
+//        $redirect_uri = self::getRedirectURI();
+//        if ($refresh_token == "") return "";
+//        if ($client_id == "") return "";
+//        if ($client_secret == "") return "";
+//        if ($redirect_uri == "") return "";
+//        $result = "https://accounts.zoho.com/oauth/v2/token?refresh_token=$refresh_token&client_id=$client_id&client_secret=$client_secret&redirect_uri=$redirect_uri&grant_type=refresh_token";
+//        try {
+//            return $result;
+//        } catch (\Exception $exception) {
+//            $error_message = $exception->getMessage();
+//            $error_title = 'Write Log Config Required';
+//            self::showErrorMessage($error_message, $error_title);
+//        }
+//    }
 
     /**
      * @return mixed
@@ -231,251 +233,6 @@ class CRM_Irasdonation_Utils
         return $decoded['access_token'];
     }
 
-    /**
-     * @return mixed
-     */
-    public static function createNewContact(\CRM_Contact_DAO_Contact $dnscontact)
-    {
-
-        $contact_id = intval($dnscontact->id);
-        $label_zoho_contact_id = self::ZOHO_CONTACT_ID;
-        $custom_field_zoho_contact_id = 'custom_' . self::get_custom_field_id($label_zoho_contact_id);
-        $label_zoho_send_contact_id = self::SEND_CONTACT_TO_ZOHO;
-        $custom_field_zoho_send_contact = 'custom_' . self::get_custom_field_id($label_zoho_send_contact_id);
-        $getparams['entityID'] = $contact_id;
-        $getparams[$custom_field_zoho_contact_id] = 1;
-        $getparams[$custom_field_zoho_send_contact] = 1;
-//        self::writeLog($getparams, 'getparams');
-        $contact_custom_fields = CRM_Core_BAO_CustomValueTable::getValues($getparams);
-        $has_zoho_contact = false;
-        if (isset($contact_custom_fields[$custom_field_zoho_contact_id])) {
-            if ($contact_custom_fields[$custom_field_zoho_contact_id]) {
-                $has_zoho_contact = true;
-                self::writeLog(strval($has_zoho_contact), 'has_zoho_contact');
-            }
-        }
-        $custom_val_zoho_contact_id = $contact_custom_fields[$custom_field_zoho_contact_id];
-        $custom_val_zoho_send_contact = (bool)$contact_custom_fields[$custom_field_zoho_send_contact];
-        if ($has_zoho_contact) {
-            return;
-        }
-        if (!$custom_val_zoho_send_contact) {
-            return;
-        }
-        $setparams['entityID'] = $contact_id;
-        $email = self::getPrimaryEmail($contact_id);
-        $phone = self::getPrimaryPhone($contact_id);
-        $nric = strval($dnscontact->external_identifier);
-        $contact_type = $dnscontact->contact_type;
-        $contact_sub_type = $dnscontact->contact_sub_type;
-        if ($contact_sub_type) {
-            $s_contact_sub_type = CRM_Utils_Array::implodePadded(CRM_Utils_Array::explodePadded($contact_sub_type), ' ');
-            $contact_type = $contact_type . ' ' . trim($s_contact_sub_type);
-        }
-
-
-        self::writeLog($email, 'email');
-        self::writeLog($phone, 'phone');
-        self::writeLog($phone, 'phone');
-        self::writeLog($nric, 'nric');
-        self::writeLog($contact_type, 'contact_sub_type');
-
-
-        $access_token = self::getAccessToken();
-////        print($access_token);
-        $client = new GuzzleHttp\Client();
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
-        $url = "https://books.zoho.com/api/v3/contacts";
-////        $url = "https://uza.uz";
-        $payload = [];
-        $random_string = CRM_Utils_String::createRandom(8, CRM_Utils_String::ALPHANUMERIC);
-        $first_name = $last_name = $phone = $email = $contact_type = "";
-//        $contact_type = $dnscontact['contact_type'];
-        $contact_person = [];
-
-//        if (array_key_exists('contact_sub_type', $dnscontact)) {
-//            if ($dnscontact['contact_sub_type']) {
-//                $contact_sub_type = CRM_Utils_Array::implodePadded($dnscontact['contact_sub_type'], ' ');
-//                $contact_type = $dnscontact['contact_type'] . ' ' . trim($contact_sub_type);
-//            }
-//        }
-////        $payload["customer_sub_type"] = $contact_type;
-//        if (array_key_exists('first_name', $dnscontact)) {
-//            if ($dnscontact['first_name']) {
-//                $first_name = $dnscontact['first_name'];
-//            }
-//            $contact_person["first_name"] = $first_name;
-//        }
-//        if (array_key_exists('last_name', $dnscontact)) {
-//            if ($dnscontact['last_name']) {
-//                $last_name = $dnscontact['last_name'];
-//            }
-//            $contact_person["last_name"] = $last_name;
-//        }
-//        $payload['contact_name'] = $first_name . ' ' . $last_name . "_" . $random_string;
-//        if (array_key_exists('email', $dnscontact)) {
-//            if ($dnscontact['email']) {
-//                if (is_array($dnscontact['email']))
-//                    $email_array = array_shift($dnscontact['email']);
-//                if (array_key_exists('email', $email_array)) {
-//                    $email = $email_array['email'];
-//                }
-//            }
-//            $contact_person["email"] = $email;
-//        }
-//        if (array_key_exists('phone', $dnscontact)) {
-//            if ($dnscontact['phone']) {
-//                if (is_array($dnscontact['phone']))
-//                    $phone_array = array_shift($dnscontact['phone']);
-//                if (array_key_exists('phone', $phone_array)) {
-//                    $phone = $phone_array['phone'];
-//                }
-//            }
-//            $contact_person["phone"] = $phone;
-//        }
-//        $payload["contact_persons"] = [$contact_person];
-////        self::writeLog($dnscontact, 'dnscontact');
-//        self::writeLog($payload, 'payload');
-//        $jpayload = json_encode($payload);
-//        self::writeLog($jpayload, 'jpayload');
-//        try {
-////            print($url);
-//            $response = $client->request('POST', $url,
-//                [
-//                    'body' => $jpayload,
-//
-//                    'user_agent' => $user_agent,
-//                    'headers' => [
-//                        'Accept' => '*/*',
-//                        'Content-Type' => 'application/json',
-//                        'X-VPS-Timeout' => '45',
-//                        'X-VPS-VIT-Integration-Product' => 'CiviCRM',
-//                        'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
-//                        'Authorization' => "Zoho-oauthtoken " . $access_token
-//                    ],
-//                ]
-//            );
-//
-//            $decoded = json_decode($response->getBody(), true);
-//            if (array_key_exists('contact', $decoded)) {
-//        $setparams[$custom_field_zoho_contact_id] = 323321123;
-//        CRM_Core_BAO_CustomValueTable::setValues($setparams);
-
-//                $dnscontact['external_identifier'] = $decoded['contact']['contact_id'];
-//            }
-//        } catch (GuzzleHttp\Exception\GuzzleException $e) {
-//            try {
-//                CRM_Core_Error::statusBounce('Dnszoho Error: Request error ', null, $e->getMessage());
-//            } catch (Exception $ex) {
-//                throw new CRM_Core_Exception('Dnszoho Error: Request error: ' . $e->getMessage());
-//            }
-//        } catch (Exception $e) {
-//            try {
-//                CRM_Core_Error::statusBounce('Dnszoho Error: Request error ', null, $e->getMessage());
-//            } catch (Exception $ex) {
-//                throw new CRM_Core_Exception('Dnszoho Error: Request error: ' . $e->getMessage());
-//            }
-//        }
-//        return $decoded;
-
-    }
-
-    public static function createNewContribution(&$dnscontribution)
-    {
-//        $access_token = self::getAccessToken();
-////        print($access_token);
-//        $client = new GuzzleHttp\Client();
-//        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
-//        $url = "https://books.zoho.com/api/v3/contacts";
-////        $url = "https://uza.uz";
-//        $payload = [];
-//        $random_string = CRM_Utils_String::createRandom(8, CRM_Utils_String::ALPHANUMERIC);
-//        $first_name = $last_name = $phone = $email = $contact_type = "";
-//        $contact_type = $dnscontact['contact_type'];
-//        $contact_person = [];
-//        if (array_key_exists('contact_sub_type', $dnscontact)) {
-//            if ($dnscontact['contact_sub_type']) {
-//                $contact_sub_type = CRM_Utils_Array::implodePadded($dnscontact['contact_sub_type'], ' ');
-//                $contact_type = $dnscontact['contact_type'] . ' ' . trim($contact_sub_type);
-//            }
-//        }
-////        $payload["customer_sub_type"] = $contact_type;
-//        if (array_key_exists('first_name', $dnscontact)) {
-//            if ($dnscontact['first_name']) {
-//                $first_name = $dnscontact['first_name'];
-//            }
-//            $contact_person["first_name"] = $first_name;
-//        }
-//        if (array_key_exists('last_name', $dnscontact)) {
-//            if ($dnscontact['last_name']) {
-//                $last_name = $dnscontact['last_name'];
-//            }
-//            $contact_person["last_name"] = $last_name;
-//        }
-//        $payload['contact_name'] = $first_name . ' ' . $last_name . "_" . $random_string;
-//        if (array_key_exists('email', $dnscontact)) {
-//            if ($dnscontact['email']) {
-//                if (is_array($dnscontact['email']))
-//                    $email_array = array_shift($dnscontact['email']);
-//                if (array_key_exists('email', $email_array)) {
-//                    $email = $email_array['email'];
-//                }
-//            }
-//            $contact_person["email"] = $email;
-//        }
-//        if (array_key_exists('phone', $dnscontact)) {
-//            if ($dnscontact['phone']) {
-//                if (is_array($dnscontact['phone']))
-//                    $phone_array = array_shift($dnscontact['phone']);
-//                if (array_key_exists('phone', $phone_array)) {
-//                    $phone = $phone_array['phone'];
-//                }
-//            }
-//            $contact_person["phone"] = $phone;
-//        }
-//        $payload["contact_persons"] = [$contact_person];
-////        self::writeLog($dnscontact, 'dnscontact');
-//        self::writeLog($payload, 'payload');
-//        $jpayload = json_encode($payload);
-//        self::writeLog($jpayload, 'jpayload');
-//        try {
-////            print($url);
-//            $response = $client->request('POST', $url,
-//                [
-//                    'body' => $jpayload,
-//
-//                    'user_agent' => $user_agent,
-//                    'headers' => [
-//                        'Accept' => '*/*',
-//                        'Content-Type' => 'application/json',
-//                        'X-VPS-Timeout' => '45',
-//                        'X-VPS-VIT-Integration-Product' => 'CiviCRM',
-//                        'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
-//                        'Authorization' => "Zoho-oauthtoken " . $access_token
-//                    ],
-//                ]
-//            );
-//
-//            $decoded = json_decode($response->getBody(), true);
-//            if (array_key_exists('contact', $decoded)) {
-//                $dnscontact['external_identifier'] = $decoded['contact']['contact_id'];
-//            }
-//        } catch (GuzzleHttp\Exception\GuzzleException $e) {
-//            try {
-//                CRM_Core_Error::statusBounce('Dnszoho Error: Request error ', null, $e->getMessage());
-//            } catch (Exception $ex) {
-//                throw new CRM_Core_Exception('Dnszoho Error: Request error: ' . $e->getMessage());
-//            }
-//        } catch (Exception $e) {
-//            try {
-//                CRM_Core_Error::statusBounce('Dnszoho Error: Request error ', null, $e->getMessage());
-//            } catch (Exception $ex) {
-//                throw new CRM_Core_Exception('Dnszoho Error: Request error: ' . $e->getMessage());
-//            }
-//        }
-//        return $decoded;
-        $custom = $dnscontribution['custom'];
-    }
 
     /**
      * @param string $error_message
@@ -509,18 +266,18 @@ class CRM_Irasdonation_Utils
     /**
      * @return mixed
      */
-    protected static function getSettings($setting = null)
+    public static function getSettings($setting = null)
     {
-        $simple_settings = CRM_Core_BAO_Setting::getItem(self::SETTINGS_NAME, self::SETTINGS_SLUG);
+        $settings = CRM_Core_BAO_Setting::getItem(self::SETTINGS_NAME, self::SETTINGS_SLUG);
         if ($setting === null) {
-            if (is_array($simple_settings)) {
-                return $simple_settings;
+            if (is_array($settings)) {
+                return $settings;
             }
-            $simple_settings = [];
-            return $simple_settings;
+            $settings = [];
+            return $settings;
         }
         if ($setting) {
-            $return_setting = CRM_utils_array::value($setting, $simple_settings);
+            $return_setting = CRM_utils_array::value($setting, $settings);
             if (!$return_setting) {
                 return false;
             }
@@ -646,6 +403,213 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
             $phone = $dao->phone;
         }
         return $phone;
+    }
+
+    public static function parsUENNumber($uen)
+    {
+        $idTypes = ["nric" => 1, "fin" => 2, "uenb" => 5, "uenl" => 6, "asgd" => 8, "itr" => 10, "ueno" => 35];
+        if ($uen == null) return 0;
+        switch ($uen) {
+            case ($uen[0] == 'S' || $uen[0] == 'T') && is_numeric(substr($uen, 1, 7)):
+                return $idTypes['nric'];
+            case ($uen[0] == 'F' || $uen[0] == 'G') && is_numeric(substr($uen, 1, 7)):
+                return $idTypes['fin'];
+            case (strlen($uen) < 10 && is_numeric(substr($uen, 0, 8))):
+                return $idTypes['uenb'];
+            case (((int)substr($uen, 0, 4)) >= 1800 && ((int)substr($uen, 0, 4)) <= date("Y")) && is_numeric(substr($uen, 4, 5)):
+                return $idTypes['uenl'];
+            case ($uen[0] == 'A' && is_numeric(substr($uen, 1, 7))):
+                return $idTypes['asgd'];
+            case (is_numeric(substr($uen, 0, 9))):
+                return $idTypes['itr'];
+            case (($uen[0] == 'T' || $uen[0] == 'S' || $uen[0] == 'R') && is_numeric(substr($uen, 1, 2)) && !is_numeric(substr($uen, 3, 2)) && is_numeric(substr($uen, 5, 4))):
+                return $idTypes['ueno'];
+            default:
+                return 0;
+        }
+    }
+
+    public static function getContributionDateCustomFields(){
+        $contributionDateCustomFields = [];
+        $customFields = \Civi\Api4\CustomField::get(FALSE)
+            ->addSelect('name', 'label')
+            ->addJoin('CustomGroup AS custom_group', 'LEFT', ['custom_group_id', '=', 'custom_group.id'])
+            ->addWhere('custom_group.extends', '=', 'Contribution')
+            ->addWhere('data_type', '=', '\'Date\'')
+            ->execute();
+        foreach ($customFields as $customField) {
+            $contributionDateCustomFields[$customField['name']] = $customField['label'];
+        }
+        return $contributionDateCustomFields;
+    }
+
+    public static function getContributionStringCustomFields(){
+        $contributionStringCustomFields = [];
+        $customFields = \Civi\Api4\CustomField::get(FALSE)
+            ->addSelect('name', 'label')
+            ->addJoin('CustomGroup AS custom_group', 'LEFT', ['custom_group_id', '=', 'custom_group.id'])
+            ->addWhere('custom_group.extends', '=', 'Contribution')
+            ->addWhere('data_type', '=', 'String')
+            ->execute();
+        foreach ($customFields as $customField) {
+            $contributionStringCustomFields[$customField['name']] = $customField['label'];
+        }
+        return $contributionStringCustomFields;
+    }
+
+    /**
+     * @param string $reportYear
+     * @param $organization_type
+     * @param $organisation_id
+     * @param $organisation_name
+     * @param $authorised_person_id
+     * @param $authorised_person_name
+     * @param $authorised_person_designation
+     * @param $authorised_person_phone
+     * @param $authorised_person_email
+     * @param $counter
+     * @param $total
+     * @param $details
+     * @return array
+     */
+    public static function prepareBody(string $reportYear, $counter, $total, $details): array
+    {
+        $settings = CRM_Irasdonation_Utils::getSettings();
+        $organisation_id = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_ID['slug'], $settings);
+        $organization_type = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANIZATION_TYPE['slug'], $settings);
+        $organisation_name = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_NAME['slug'], $settings);
+        $authorised_person_id = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_ID['slug'], $settings);
+        $authorised_person_name = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_NAME['slug'], $settings);
+        $authorised_person_designation = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_DESIGNATION['slug'], $settings);
+        $authorised_person_phone = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_PHONE['slug'], $settings);
+        $authorised_person_email = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_EMAIL['slug'], $settings);
+
+        $body = array(
+            'orgAndSubmissionInfo' => [
+                'validateOnly' => 'true',
+                'basisYear' => $reportYear,
+                'organisationIDType' => $organization_type,
+                'organisationIDNo' => $organisation_id,
+                'organisationName' => $organisation_name,
+                'batchIndicator' => 'O',
+                'authorisedPersonIDNo' => $authorised_person_id,
+                'authorisedPersonName' => $authorised_person_name,
+                'authorisedPersonDesignation' => $authorised_person_designation,
+                'telephone' => $authorised_person_phone,
+                'authorisedPersonEmail' => $authorised_person_email,
+                'numOfRecords' => $counter,
+                'totalDonationAmount' => $total
+            ],
+            "donationDonorDtl" => $details
+        );
+        return $body;
+    }
+
+    /**
+     * @param $client_id
+     * @param $client_secret
+     * @param string $access_token
+     * @return array
+     */
+    public static function prepareHeader($client_id, $client_secret, string $access_token): array
+    {
+        $header = [
+            "Accept: application/json",
+            "charset: UTF-8",
+            "Content-Type: application/json",
+            "X-IBM-Client-Id: $client_id",
+            "X-IBM-Client-Secret: $client_secret",
+            "access_token: $access_token",
+        ];
+        return $header;
+    }
+
+    /**
+     * @param $startDate
+     * @param $endDate
+     * @param $includePrevious
+     * @return array|void
+     */
+    public static function prepareReportDetails($startDate, $endDate, $includePrevious)
+    {
+
+
+        $reportYear = date("Y");
+
+
+        $where = "UPPER(cdnlog.receipt_status)='ISSUED'";
+
+        if ($includePrevious == 0) {
+            $where .= " AND cdnlog.id NOT IN 
+        (SELECT iras_donation.cdntaxreceipts_log_id FROM civicrm_o8_iras_donation iras_donation 
+        WHERE iras_donation.created_date IS NOT NULL) ";
+        }
+        if ($startDate != null && $endDate != null) {
+            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$startDate' AND FROM_UNIXTIME(cdnlog.issued_on) <= '$endDate'";
+        }
+
+
+        //generate header of report
+        $sql = "SELECT SQL_CALC_FOUND_ROWS
+    cdnlog.id cdnlog_id, 
+    contact.sort_name contact_sort_name, 
+    contact.external_identifier contact_external_identifier,
+    address.supplemental_address_1 address_supplemental_address_1,
+    address.supplemental_address_2  address_supplemental_address_2,
+    address.postal_code  address_postal_code,
+    RIGHT(cdnlog.receipt_no, 10) cdnlog_receipt_no,
+    FROM_UNIXTIME(cdnlog.issued_on) cdnlog_issued_on,
+    cdnlog.receipt_amount cdnlog_receipt_amount
+    FROM cdntaxreceipts_log cdnlog 
+    INNER JOIN cdntaxreceipts_log_contributions cdnlogcontrib ON cdnlogcontrib.receipt_id = cdnlog.id
+    INNER JOIN civicrm_contribution contrib ON contrib.id = cdnlogcontrib.contribution_id  
+    INNER JOIN civicrm_contact contact ON contact.id = cdnlog.contact_id 
+    INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id   
+    LEFT JOIN civicrm_address address ON address.id = contact.addressee_id
+    WHERE $where
+    LIMIT 5000";
+        self::writeLog($sql, "sql");
+        $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
+
+        $totalRows = CRM_Core_DAO::singleValueQuery("SELECT FOUND_ROWS()");
+        $insert = '';
+        $total = 0;
+        $counter = 0;
+        $generatedDate = date('Y-m-d H:i:s');
+
+        $dataBody = array();
+        $reportedIDs = array();
+        //generate body of th report
+        $details = array();
+        while ($result->fetch()) {
+
+            $idType = self::parsUENNumber($result->contact_external_identifier);
+            self::writeLog($idType);
+            if ($idType > 0) {
+                $dataBody = array(
+                    'recordID' => $counter + 1,
+                    'idType' => $idType,
+                    'idNumber' => $result->contact_external_identifier,
+                    'individualIndicator' => '',
+                    'name' => $result->contact_sort_name,
+                    'addressLine1' => $result->address_supplemental_address_1,
+                    'addressLine2' => $result->address_supplemental_address_2,
+                    'postalCode' => '',
+                    'donationAmount' => round($result->cdnlog_receipt_amount),
+                    'dateOfDonation' => date("Ymd", strtotime($result->cdnlog_issued_on)),
+                    'receiptNum' => $result->cdnlog_receipt_no,
+                    'typeOfDonation' => 'O',
+                    'namingDonation' => 'Z'
+                );
+
+                array_push($reportedIDs, $result->cdnlog_id);
+
+                array_push($details, $dataBody);
+                $total += $result->receipt_amount;
+                $counter++;
+            }
+        }
+        return array($totalRows, $total, $counter, $generatedDate, $reportedIDs, $details);
     }
 
 }
