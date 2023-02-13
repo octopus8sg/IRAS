@@ -88,6 +88,10 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         U::writeLog($body, "prepared_body");
         U::writeLog($header, "prepared_header");
         U::writeLog($report_url, "report_url");
+        $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
+        $session = CRM_Core_Session::singleton();
+        $session->pushUserContext($url);
+        CRM_Utils_System::redirect("http://wp-demo.localhost:7979/wp-json/iras/v1/report/?code=xx3&state=4xx");
         return;
 
         $response = null;

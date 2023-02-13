@@ -6,23 +6,98 @@ use \Firebase\JWT\JWT;
 
 class CRM_Irasdonation_Utils
 {
-    public const SAVE_LOG = ['slug' => 'save_log', 'name' => 'Save Log'];
+    public const SAVE_LOG = [
+        'slug' => 'save_log',
+        'name' => 'Save Log',
+        'description' => "Write debugging output to CiviCRM log file"];
     public const SETTINGS_NAME = "IRAS Settings";
     public const SETTINGS_SLUG = 'iras_settings';
-    public const CLIENT_ID = ['slug' => 'client_id', 'name' => 'Client ID'];
-    public const CLIENT_SECRET = ['slug' => 'client_secret', 'name' => 'Client Secret'];
-    public const RECIEPT_ID = ['slug' => 'reciept_id', 'name' => 'Reciept ID Custom Field'];
-    public const RECIEPT_DATE = ['slug' => 'reciept_date', 'name' => 'Reciept Date Custom Field'];
-    public const ORGANIZATION_TYPE = ['slug' => 'organization_type', 'name' => 'Organization type'];
-    public const ORGANISATION_ID = ['slug' => 'organisation_id', 'name' => 'Organization ID/UEN'];
-    public const ORGANISATION_NAME = ['slug' => 'organisation_name', 'name' => 'Organization name'];
-    public const AUTHORISED_PERSON_ID = ['slug' => 'authorised_person_id', 'name' => 'Authorized User ID(SingpassID)'];
-    public const AUTHORISED_PERSON_NAME = ['slug' => 'authorised_person_name', 'name' => 'Authorized user full name'];
-    public const AUTHORISED_PERSON_DESIGNATION = ['slug' => 'authorised_person_designation', 'name' => 'Authorized user designation'];
-    public const AUTHORISED_PERSON_PHONE = ['slug' => 'authorised_person_phone', 'name' => 'Phone number'];
-    public const AUTHORISED_PERSON_EMAIL = ['slug' => 'authorised_person_email', 'name' => 'Authorized user email'];
-    public const REPORT_URL = ['slug' => 'report_url', 'name' => 'Report url'];
-    public const MIN_AMOUNT = ['slug' => 'min_amount', 'name' => 'Minimum amount($)'];
+    public const CLIENT_ID = [
+        'slug' => 'client_id',
+        'name' => 'Client ID',
+        'description' => "String containing the client ID of the application invoking IRAS API.\n"
+            . "This value will be provided to the application vendor by IRAS.\n"
+            . "E.g. a1234b5c-1234-abcd-efgh-a1234b5cdef"];
+    public const CLIENT_SECRET = [
+        'slug' => 'client_secret',
+        'name' => 'Client Secret',
+        'description' => "String containing the client secret of the application invoking IRAS API.\n"
+            . "This value will be provided to the application vendor by IRAS.\n"
+            . "E.g. a12345bC67e8fG9a12345bC67e8fG9a12345bC67e8fG9"];
+    public const RECIEPT_ID = [
+        'slug' => 'reciept_id',
+        'name' => 'Reciept ID Custom Field',
+        'description' => "Custom field to get Reciept ID from (leave blank to use defaults)"];
+    public const RECIEPT_DATE = [
+        'slug' => 'reciept_date',
+        'name' => 'Reciept Date Custom Field',
+        'description' => "Custom field to get Reciept Date from (leave blank to use defaults)"];
+    public const ORGANIZATION_TYPE = [
+        'slug' => 'organization_type',
+        'name' => 'Organization type',
+        'description' => "Must be one of the following: \n"
+            . "UEN-BUSINESS\n"
+            . "UEN-LOCAL CO\n"
+            . "UEN-OTHERS\n"
+            . "ASGD\n"
+            . "ITR"];
+    public const ORGANISATION_ID = [
+        'slug' => 'organisation_id',
+        'name' => 'Organization ID/UEN',
+        'description' => "Must be one of the following:\n"
+            . "UEN-BUSINESS = NNNNNNNNC\n"
+            . "UEN-LOCAL CO = YYYYNNNNNC\n"
+            . "UEN-OTHERS = TYYPQNNNNC or SYYPQNNNNC\n"
+            . "ASGD No. = ANNNNNNNC\n"
+            . "ITR No. = NNNNNNNNNC\n"
+            . "Where: C = Check digit; N = Numeric; Y = Year"];
+    public const ORGANISATION_NAME = [
+        'slug' => 'organisation_name',
+        'name' => 'Organization name',
+        'description' => "Max. 60 characters"];
+    public const AUTHORISED_PERSON_ID = [
+        'slug' => 'authorised_person_id',
+        'name' => 'Authorized User ID(SingpassID)',
+        'description' => "The ID Number of person submitting the Donation Information.\n"
+            . "Must be one of the following:\n"
+            . "Valid NRIC with prefix S/T\n"
+            . "Valid FIN with prefix F/G/M\n"
+            . "Valid ASGD as ANNNNNNNC\n"
+            . "Valid ITR as NNNNNNNNNC"];
+    public const AUTHORISED_PERSON_NAME = [
+        'slug' => 'authorised_person_name',
+        'name' => 'Authorized user full name',
+        'description' => "Max. 30 characters"];
+    public const AUTHORISED_PERSON_DESIGNATION = ['slug' => 'authorised_person_designation',
+        'name' => 'Authorized user designation',
+        'description' => "Max. 30 characters"];
+    public const AUTHORISED_PERSON_PHONE = [
+        'slug' => 'authorised_person_phone',
+        'name' => 'Authorized user phone number',
+        'description' => "Min. 8 digits"];
+    public const AUTHORISED_PERSON_EMAIL = [
+        'slug' => 'authorised_person_email',
+        'name' => 'Authorized user email',
+        'description' => "Max. 50 characters"];
+    public const REPORT_URL = [
+        'slug' => 'report_url',
+        'name' => 'Report URL',
+        'description' => "For Sandbox Testing:\n"
+            . "https://apisandbox.iras.gov.sg/iras/sb/DonationCP/submit\n"
+            . "For Production Usage:\n"
+            . "https://apiservices.iras.gov.sg/iras/prod/DonationCP/submit"];
+    public const CALLBACK_URL = [
+        'slug' => 'callback_url',
+        'name' => 'Callback URL',
+        'description' => "Callback URL to use Corppass via the registration form"];
+    public const VALIDATE_ONLY = [
+        'slug' => 'validate_only',
+        'name' => 'Validate only',
+        'description' => "If checked, the API will perform validation of the donation information without submission.\n"
+            . "Otherwise, the API will perform validation of the donation information and submission to IRAS."];
+    public const MIN_AMOUNT = ['slug' => 'min_amount',
+        'name' => 'Minimum amount($)',
+        'description' => "Minimum amount of Contribution to include to IRAS Donation Report"];
     public const TYPES = array(
         '5' => 'UEN-BUSINESS',
         '6' => 'UEN-LOCAL CO',
@@ -31,6 +106,25 @@ class CRM_Irasdonation_Utils
         'I' => 'ITR'
     );
 
+    public static function callbackUrl()
+    {
+//        try {
+        $code = CRM_Utils_Request::retrieveValue('code', 'String', null);
+        $state = CRM_Utils_Request::retrieveValue('state', 'String', null);
+        $json = "{'code': '$code', 'state': '$state'}";
+        self::writeLog($json, "json");
+
+//            CRM_Utils_JSON::output("{'code': '$code', 'state': '$state'}");
+        self::writeLog($json, "json2");
+        $session = CRM_Core_Session::singleton();
+//            CRM_Core_BAO_Navigation::resetNavigation();
+        $redirectUrl = $session->popUserContext();
+        self::writeLog($redirectUrl, "redirect_url");
+        CRM_Utils_System::redirect($redirectUrl);
+//        } catch (Exception $e) {
+//            self::writeLog($e->getMessage());
+//        }
+    }
 
     /**
      * @param $input
@@ -429,7 +523,8 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         }
     }
 
-    public static function getContributionDateCustomFields(){
+    public static function getContributionDateCustomFields()
+    {
         $contributionDateCustomFields = [];
         $customFields = \Civi\Api4\CustomField::get(FALSE)
             ->addSelect('name', 'label')
@@ -443,7 +538,8 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         return $contributionDateCustomFields;
     }
 
-    public static function getContributionStringCustomFields(){
+    public static function getContributionStringCustomFields()
+    {
         $contributionStringCustomFields = [];
         $customFields = \Civi\Api4\CustomField::get(FALSE)
             ->addSelect('name', 'label')

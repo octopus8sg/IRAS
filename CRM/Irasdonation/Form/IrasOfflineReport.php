@@ -90,7 +90,7 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
     if($params['min_amount']!=null)
     {
       $min_amount = (int)$params['min_amount'];
-      $wword .= " AND cdnlog.receipt_amount > '$min_amount'";
+      $wword .= " AND cdnlog.receipt_amount >= '$min_amount'";
     }
 
     $sql = "SELECT 

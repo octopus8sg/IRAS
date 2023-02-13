@@ -31,6 +31,12 @@
     <access_arguments>access CiviCRM</access_arguments>
   </item>
   <item>
+    <path>civicrm/irasdonation/callback_url</path>
+    <page_callback>CRM_Irasdonation_Utils::callbackUrl</page_callback>
+    <title>IRAS Callback Url</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
     <path>civicrm/irasdonation/transactions_filter</path>
     <page_callback>CRM_Irasdonation_Form_TransactionsFilter</page_callback>
     <title>TransactionsFilter</title>

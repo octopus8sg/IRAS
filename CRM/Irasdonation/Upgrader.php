@@ -1,5 +1,6 @@
 <?php
 use CRM_Irasdonation_ExtensionUtil as E;
+use CRM_Irasdonation_Utils as U;
 
 /**
  * Collection of upgrade steps.
@@ -44,9 +45,26 @@ class CRM_Irasdonation_Upgrader extends CRM_Irasdonation_Upgrader_Base {
   /**
    * Example: Run a simple query when a module is enabled.
    */
-  // public function enable() {
-  //  CRM_Core_DAO::executeQuery('UPDATE foo SET is_active = 1 WHERE bar = "whiz"');
-  // }
+   public function enable() {
+//    CRM_Core_DAO::executeQuery('UPDATE foo SET is_active = 1 WHERE bar = "whiz"');
+       $settings = [];
+       $settings[U::SAVE_LOG['slug']] = 1;
+       $settings[U::CLIENT_ID['slug']] = "193776c5-dcc9-410a-ad20-376f269ca68c";
+       $settings[U::CLIENT_SECRET['slug']] = "sH8rR7tS8pY3dS2cX3dD7rP4vT3vB4rI4yP7dT0iO4jA2rP7dO";
+       $settings[U::ORGANIZATION_TYPE['slug']] = "6";
+       $settings[U::ORGANISATION_ID['slug']] = "180011032C";
+       $settings[U::ORGANISATION_NAME['slug']] = "Octopus8_123456X";
+       $settings[U::AUTHORISED_PERSON_ID['slug']] = "S3002879A";
+       $settings[U::AUTHORISED_PERSON_NAME['slug']] = "Karl Trunbull";
+       $settings[U::AUTHORISED_PERSON_DESIGNATION['slug']] = "Manager";
+       $settings[U::AUTHORISED_PERSON_PHONE['slug']] = "6591478662";
+       $settings[U::AUTHORISED_PERSON_EMAIL['slug']] = "karl@octopus8.com";
+       $settings[U::REPORT_URL['slug']] = "https://apisandbox.iras.gov.sg/iras/sb/DonationCP/submit";
+       $settings[U::CALLBACK_URL['slug']] = "https://asliddin.socialservicesconnect.com/wp-json/iras/v1/report";
+       $settings[U::VALIDATE_ONLY['slug']] = 1;
+       $settings[U::MIN_AMOUNT['slug']] = 1;
+       CRM_Core_BAO_Setting::setItem($settings, U::SETTINGS_NAME, U::SETTINGS_SLUG);
+   }
 
   /**
    * Example: Run a simple query when a module is disabled.
