@@ -14,6 +14,23 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
 
     public function buildQuickForm()
     {
+        $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
+        $session = CRM_Core_Session::singleton();
+        $session->pushUserContext($url);
+        $iras_access_token = $session->get(U::ACCESSTOKEN);
+        U::writeLog($iras_access_token, "iras_access_token");
+        $iras_login_time = $session->get(U::LOGINTIME);
+        U::writeLog($iras_login_time, "iras_login_time");
+        $iras_login_time_diff = time() - $iras_login_time;
+        U::writeLog($iras_login_time_diff, "iras_login_time_diff");
+        if(!$iras_access_token){
+            CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
+            CRM_Utils_System::redirect("http://wp-demo.localhost:7979/wp-json/iras/v1/report/?code=xx3&state=4xx");
+        }
+        if($iras_login_time_diff > 1799){
+            CRM_Core_Session::setStatus('You logged more than 30 minutes ago', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
+            CRM_Utils_System::redirect("http://wp-demo.localhost:7979/wp-json/iras/v1/report/?code=xx3&state=4xx");
+        }
         //start report from
         $this->add('datepicker', 'start_date', ts('Start date'), [], FALSE, ['time' => FALSE]);
 
@@ -91,7 +108,6 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
         $session = CRM_Core_Session::singleton();
         $session->pushUserContext($url);
-        CRM_Utils_System::redirect("http://wp-demo.localhost:7979/wp-json/iras/v1/report/?code=xx3&state=4xx");
         return;
 
         $response = null;

@@ -22,8 +22,8 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
         $this->add('checkbox', U::VALIDATE_ONLY['slug'], U::VALIDATE_ONLY['name']);
         $this->add('static', U::VALIDATE_ONLY['slug'] . "_description", U::VALIDATE_ONLY['slug'], U::VALIDATE_ONLY['description']);
 
-        $this->add('text', U::REPORT_URL['slug'], U::REPORT_URL['name'], $textsize);
-        $this->add('static', U::REPORT_URL['slug'] . "_description", U::REPORT_URL['slug'], U::REPORT_URL['description']);
+        $this->add('text', U::IRAS_API_URL['slug'], U::IRAS_API_URL['name'], $textsize);
+        $this->add('static', U::IRAS_API_URL['slug'] . "_description", U::IRAS_API_URL['slug'], U::IRAS_API_URL['description']);
 
         $this->add('text', U::CALLBACK_URL['slug'], U::CALLBACK_URL['name'], $textsize);
         $this->add('static', U::CALLBACK_URL['slug'] . "_description", U::CALLBACK_URL['slug'], U::CALLBACK_URL['description']);
@@ -129,7 +129,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
             U::AUTHORISED_PERSON_DESIGNATION['slug'] => null,
             U::AUTHORISED_PERSON_PHONE['slug'] => null,
             U::AUTHORISED_PERSON_EMAIL['slug'] => null,
-            U::REPORT_URL['slug'] => null,
+            U::IRAS_API_URL['slug'] => null,
             U::CALLBACK_URL['slug'] => null,
             U::VALIDATE_ONLY['slug'] => null,
             U::MIN_AMOUNT['slug'] => null
@@ -149,22 +149,11 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
         $postedVals[U::AUTHORISED_PERSON_DESIGNATION['slug']] = $values[U::AUTHORISED_PERSON_DESIGNATION['slug']];
         $postedVals[U::AUTHORISED_PERSON_PHONE['slug']] = $values[U::AUTHORISED_PERSON_PHONE['slug']];
         $postedVals[U::AUTHORISED_PERSON_EMAIL['slug']] = $values[U::AUTHORISED_PERSON_EMAIL['slug']];
-        $postedVals[U::REPORT_URL['slug']] = $values[U::REPORT_URL['slug']];
+        $postedVals[U::IRAS_API_URL['slug']] = $values[U::IRAS_API_URL['slug']];
         $postedVals[U::CALLBACK_URL['slug']] = $values[U::CALLBACK_URL['slug']];
         $postedVals[U::VALIDATE_ONLY['slug']] = $values[U::VALIDATE_ONLY['slug']];
         $postedVals[U::MIN_AMOUNT['slug']] = $values[U::MIN_AMOUNT['slug']];
 
-        $checkFields = array(
-            U::ORGANISATION_ID['slug'] => U::ORGANISATION_ID['name'],
-            U::ORGANIZATION_TYPE['slug'] => U::ORGANIZATION_TYPE['name'],
-            U::ORGANISATION_NAME['slug'] => U::ORGANISATION_NAME['name']);
-
-        foreach ($postedVals as $key => $value) {
-            if (in_array($key, array_keys($checkFields)) && $value == null) {
-                CRM_Core_Session::setStatus("\"" . $checkFields[$key] . "\" field is required", ts('Empty field'), 'warning', array('expires' => 5000));
-                return;
-            }
-        }
 
         if (U::parsUENNumber($postedVals[U::ORGANISATION_ID['slug']]) == 0) {
             CRM_Core_Session::setStatus('Incorrect organization ID(UEN)', ts('Incorrect UEN'), 'warning', array('expires' => 5000));

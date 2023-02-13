@@ -59,7 +59,7 @@ class CRM_Irasdonation_Upgrader extends CRM_Irasdonation_Upgrader_Base {
        $settings[U::AUTHORISED_PERSON_DESIGNATION['slug']] = "Manager";
        $settings[U::AUTHORISED_PERSON_PHONE['slug']] = "6591478662";
        $settings[U::AUTHORISED_PERSON_EMAIL['slug']] = "karl@octopus8.com";
-       $settings[U::REPORT_URL['slug']] = "https://apisandbox.iras.gov.sg/iras/sb/DonationCP/submit";
+       $settings[U::IRAS_API_URL['slug']] = "https://apisandbox.iras.gov.sg/iras/sb";
        $settings[U::CALLBACK_URL['slug']] = "https://asliddin.socialservicesconnect.com/wp-json/iras/v1/report";
        $settings[U::VALIDATE_ONLY['slug']] = 1;
        $settings[U::MIN_AMOUNT['slug']] = 1;

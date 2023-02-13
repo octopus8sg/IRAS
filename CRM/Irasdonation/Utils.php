@@ -12,6 +12,12 @@ class CRM_Irasdonation_Utils
         'description' => "Write debugging output to CiviCRM log file"];
     public const SETTINGS_NAME = "IRAS Settings";
     public const SETTINGS_SLUG = 'iras_settings';
+    public const IRASUSER = 'iras_user';
+    public const CODE = 'iras_code';
+    public const CODETIME = 'iras_codetime';
+    public const STATE = 'iras_state';
+    public const LOGINTIME = 'iras_login_time';
+    public const ACCESSTOKEN = 'iras_access_token';
     public const CLIENT_ID = [
         'slug' => 'client_id',
         'name' => 'Client ID',
@@ -79,13 +85,13 @@ class CRM_Irasdonation_Utils
         'slug' => 'authorised_person_email',
         'name' => 'Authorized user email',
         'description' => "Max. 50 characters"];
-    public const REPORT_URL = [
-        'slug' => 'report_url',
-        'name' => 'Report URL',
+    public const IRAS_API_URL = [
+        'slug' => 'iras_api_url',
+        'name' => 'IRAS API URL',
         'description' => "For Sandbox Testing:\n"
-            . "https://apisandbox.iras.gov.sg/iras/sb/DonationCP/submit\n"
+            . "https://apisandbox.iras.gov.sg/iras/sb\n"
             . "For Production Usage:\n"
-            . "https://apiservices.iras.gov.sg/iras/prod/DonationCP/submit"];
+            . "https://apiservices.iras.gov.sg/iras/prod"];
     public const CALLBACK_URL = [
         'slug' => 'callback_url',
         'name' => 'Callback URL',
@@ -119,6 +125,9 @@ class CRM_Irasdonation_Utils
         $session = CRM_Core_Session::singleton();
 //            CRM_Core_BAO_Navigation::resetNavigation();
         $redirectUrl = $session->popUserContext();
+        $now = time();
+        $session->set(SELF::ACCESSTOKEN, "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Il9SQzZ4d09NdmJ0dDZhald1WmU2R2xncy1qM3dtNXJpQXlDVW9SYXNhLUkifQ");
+        $session->set(SELF::LOGINTIME, $now);
         self::writeLog($redirectUrl, "redirect_url");
         CRM_Utils_System::redirect($redirectUrl);
 //        } catch (Exception $e) {
