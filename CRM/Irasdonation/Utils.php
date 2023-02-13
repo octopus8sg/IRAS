@@ -135,6 +135,17 @@ class CRM_Irasdonation_Utils
 //        }
     }
 
+
+    /**
+     * @param $irasLoginURL
+     */
+    public static function gotoIrasLoginURL($irasLoginURL): void
+    {
+        $template = CRM_Core_Smarty::singleton();
+        $tpl = 'CRM/Irasdonation/Page/IrasLogin.tpl';
+        $template->assign('irasLoginURL', $irasLoginURL);
+        print $template->fetch($tpl);
+    }    
     /**
      * @param $input
      * @param $preffix_log
@@ -182,6 +193,39 @@ class CRM_Irasdonation_Utils
         } catch (\Exception $exception) {
             $error_message = $exception->getMessage();
             $error_title = 'Write Log Config Required';
+            self::showErrorMessage($error_message, $error_title);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public static function getIrasLoginURL()
+    {
+        $result = false;
+        try {
+            $result = self::getSettings(self::IRAS_API_URL['slug']);
+            $result = $result . "/Authentication/CorpPassAuth";
+            return $result;
+        } catch (\Exception $exception) {
+            $error_message = $exception->getMessage();
+            $error_title = 'Iras Login Config Required';
+            self::showErrorMessage($error_message, $error_title);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public static function getCallbackURL()
+    {
+        $result = false;
+        try {
+            $result = self::getSettings(self::CALLBACK_URL['slug']);
+            return $result;
+        } catch (\Exception $exception) {
+            $error_message = $exception->getMessage();
+            $error_title = 'Iras Login Config Required';
             self::showErrorMessage($error_message, $error_title);
         }
     }
@@ -257,20 +301,59 @@ class CRM_Irasdonation_Utils
         }
     }
 
-//    public static function getClientSecret(): string
-//    {
-//        $result = "";
-//        try {
-//            $result = strval(self::getSettings(self::CLIENT_SECRET));
-////            self::writeLog($result, 'getValidateUEN');
-//            return $result;
-//        } catch (\Exception $exception) {
-//            $error_message = $exception->getMessage();
-//            $error_title = 'Write Log Config Required';
-//            self::showErrorMessage($error_message, $error_title);
-//        }
-//    }
-//
+
+    public static function getClientSecret(): string
+    {
+        $result = "";
+        try {
+            $result = strval(self::getSettings(self::CLIENT_SECRET['slug']));
+//            self::writeLog($result, 'getValidateUEN');
+            return $result;
+        } catch (\Exception $exception) {
+            $error_message = $exception->getMessage();
+            $error_title = 'Write Log Config Required';
+            self::showErrorMessage($error_message, $error_title);
+        }
+    }
+
+    /**
+     * @param $url
+     * @param $payload
+     * @return \Psr\Http\Message\StreamInterface
+     * @throws CRM_Core_Exception
+     */
+    public static function getLoginResponse($url)
+    {
+        $client = new GuzzleHttp\Client();
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
+        $clientID = self::getClientID();
+        self::writeLog($clientID, "clientID");
+        $clientSecret = self::getClientSecret();
+        self::writeLog($clientSecret, "clientSecret");
+        self::writeLog($url, "url");
+        try {
+            $response = $client->request('GET', $url, [
+                'user_agent' => $user_agent,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'X-IBM-Client-Secret' => $clientSecret,
+                    'X-IBM-Client-Id' => $clientID,
+                    'X-VPS-Timeout' => '45',
+                    'X-VPS-Timeout' => '45',
+                    'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
+                ],
+            ]);
+        } catch (GuzzleHttp\Exception\GuzzleException $e) {
+            CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
+            throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
+            throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
+        }
+        return $response->getBody();
+    }
+
 //    public static function getRedirectURI(): string
 //    {
 //        $result = "";

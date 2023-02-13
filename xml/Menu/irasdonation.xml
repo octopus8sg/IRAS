@@ -42,4 +42,10 @@
     <title>TransactionsFilter</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/civicrm/iraslogin</path>
+    <page_callback>CRM_Irasdonation_Page_IrasLogin</page_callback>
+    <title>IrasLogin</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>

@@ -23,13 +23,38 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         U::writeLog($iras_login_time, "iras_login_time");
         $iras_login_time_diff = time() - $iras_login_time;
         U::writeLog($iras_login_time_diff, "iras_login_time_diff");
-        if(!$iras_access_token){
-            CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
-            CRM_Utils_System::redirect("http://wp-demo.localhost:7979/wp-json/iras/v1/report/?code=xx3&state=4xx");
+        $irasLoginURL = U::getIrasLoginURL();
+        $callbackURL = U::getCallbackURL();
+        $iras_logged = true;
+//        CRM_Core_Error::debug_var('decoded', $decoded);
+        if (!$iras_access_token) {
+            $iras_logged = false;
         }
-        if($iras_login_time_diff > 1799){
-            CRM_Core_Session::setStatus('You logged more than 30 minutes ago', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
-            CRM_Utils_System::redirect("http://wp-demo.localhost:7979/wp-json/iras/v1/report/?code=xx3&state=4xx");
+        if ($iras_login_time_diff > 30) {
+            $iras_logged = false;
+        }
+        if (!$iras_logged) {
+            $state = uniqid();
+            $session->set(U::STATE, $state);
+            $irasLoginFullURL = "$irasLoginURL?scope=DonationSub&callback_url=$callbackURL&tax_agent=false&state=$state";
+            U::writeLog($irasLoginFullURL, 'irasLoginFullURL');
+            $loginresponse = U::getLoginResponse($irasLoginFullURL);
+            U::writeLog(json_decode($loginresponse), 'loginresponse');
+            try {
+                $decoded = json_decode($loginresponse, true);
+            } catch (Exception $e) {
+                throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+            }
+            try {
+                $irasLoginRealURL = $decoded['data']['url'];
+            } catch (Exception $e) {
+                throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+            }
+            U::writeLog($irasLoginRealURL, 'irasLoginRealURL');
+            CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
+            CRM_Utils_System::redirect($irasLoginRealURL);
+            CRM_Utils_System::civiExit();
+            exit;
         }
         //start report from
         $this->add('datepicker', 'start_date', ts('Start date'), [], FALSE, ['time' => FALSE]);
@@ -53,7 +78,8 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         parent::buildQuickForm();
     }
 
-    public function postProcess()
+    public
+    function postProcess()
     {
         $settings = U::getSettings();
         $organisation_id = CRM_Utils_Array::value(U::ORGANISATION_ID['slug'], $settings);
@@ -82,7 +108,6 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             CRM_Core_Session::setStatus('Please select date range', ts('Date range incorrect'), 'warning', array('expires' => 5000));
             return;
         }
-
 
 
         list($totalRows, $total, $counter, $generatedDate, $reportedIDs, $details) = U::prepareReportDetails($startDate, $endDate, $includePrevious);
@@ -154,7 +179,8 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
      *
      * @return array (string)
      */
-    public function getRenderableElementNames()
+    public
+    function getRenderableElementNames()
     {
         // The _elements list includes some items which should not be
         // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
