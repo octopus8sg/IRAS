@@ -71,6 +71,9 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
         $this->add('text', U::AUTHORISED_PERSON_EMAIL['slug'], U::AUTHORISED_PERSON_EMAIL['name'], $textsize);
         $this->add('static', U::AUTHORISED_PERSON_EMAIL['slug'] . "_description",
             U::AUTHORISED_PERSON_EMAIL['slug'], U::AUTHORISED_PERSON_EMAIL['description']);
+        $this->add('text', U::PREFIX['slug'], U::PREFIX['name'], $textsize);
+        $this->add('static', U::PREFIX['slug'] . "_description",
+            U::PREFIX['slug'], U::PREFIX['description']);
 /* //If custom fields are needed to be used
         $contributionStringCustomFields = U::getContributionStringCustomFields();
         $contributionDateCustomFields = U::getContributionDateCustomFields();
@@ -132,6 +135,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
             U::IRAS_API_URL['slug'] => null,
             U::CALLBACK_URL['slug'] => null,
             U::VALIDATE_ONLY['slug'] => null,
+            U::PREFIX['slug'] => null,
             U::MIN_AMOUNT['slug'] => null
         ];
 
@@ -152,6 +156,7 @@ class CRM_Irasdonation_Form_IrasConfiguration extends CRM_Core_Form
         $postedVals[U::IRAS_API_URL['slug']] = $values[U::IRAS_API_URL['slug']];
         $postedVals[U::CALLBACK_URL['slug']] = $values[U::CALLBACK_URL['slug']];
         $postedVals[U::VALIDATE_ONLY['slug']] = $values[U::VALIDATE_ONLY['slug']];
+        $postedVals[U::PREFIX['slug']] = $values[U::PREFIX['slug']];
         $postedVals[U::MIN_AMOUNT['slug']] = $values[U::MIN_AMOUNT['slug']];
 
 

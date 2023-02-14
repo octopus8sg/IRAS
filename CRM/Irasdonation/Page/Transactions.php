@@ -41,7 +41,8 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
     $transaction_range_end_date = 'transaction_range_end_date';
     $sent_range_start_date = 'sent_range_start_date';
     $sent_range_end_date = 'sent_range_end_date';
-
+      $settings = CRM_Irasdonation_Utils::getSettings();
+      $prefix = CRM_Utils_Array::value(CRM_Irasdonation_Utils::PREFIX['slug'], $settings);
     $params[$method] = CRM_Utils_Request::retrieveValue($method, 'Positive', null);
     $params[$sent_response] = CRM_Utils_Request::retrieveValue($sent_response, 'Positive', null);
     $params[$transaction_range_start_date] = CRM_Utils_Request::retrieveValue($transaction_range_start_date, 'String', null);
@@ -105,7 +106,7 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
 
 
     $sql = "SELECT cdnlog.id, 
-            RIGHT(cdnlog.receipt_no, 10) receipt_no,
+            CONCAT('$prefix', LPAD(RIGHT(cdnlogcontrib.contribution_id, 7), 7, 0)) receipt_no,
             FROM_UNIXTIME(cdnlog.issued_on) issued_on,
             cdnlog.receipt_amount,
             cont.id contact_id,

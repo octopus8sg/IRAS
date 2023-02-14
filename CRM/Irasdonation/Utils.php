@@ -16,6 +16,13 @@ class CRM_Irasdonation_Utils
     public const STATE = 'iras_state';
     public const LOGINTIME = 'iras_login_time';
     public const ACCESSTOKEN = 'iras_access_token';
+    public const PREFIX = [
+        'slug' => 'prefix',
+        'name' => 'Reciept No Prefix',
+        'description' => "Max. 3 characters. Receipt numbers are formed by appending the CiviCRM Contribution ID to this prefix..\n"
+            . "Receipt numbers must be unique within your organization. If you also issue tax receipts using another system,\n"
+            . " you can use the prefix to ensure uniqueness\n"
+            . "(e.g. enter 'OCT' here so all receipts issued through CiviCRM are OCT000001, OCT0000002, etc.)"];
     public const CLIENT_ID = [
         'slug' => 'client_id',
         'name' => 'Client ID',
@@ -673,7 +680,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
     {
         $settings = self::getSettings();
         $min_amount= CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
-
+        $prefix = CRM_Utils_Array::value(CRM_Irasdonation_Utils::PREFIX['slug'], $settings);
 
         $where = "UPPER(cdnlog.receipt_status)='ISSUED'";
 
@@ -700,7 +707,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
     address.supplemental_address_1 address_supplemental_address_1,
     address.supplemental_address_2  address_supplemental_address_2,
     address.postal_code  address_postal_code,
-    RIGHT(cdnlog.receipt_no, 10) cdnlog_receipt_no,
+    CONCAT('$prefix', LPAD(RIGHT(cdnlogcontrib.contribution_id, 7), 7, 0)) cdnlog_receipt_no,
     FROM_UNIXTIME(cdnlog.issued_on) cdnlog_issued_on,
     cdnlog.receipt_amount cdnlog_receipt_amount
     FROM cdntaxreceipts_log cdnlog 
@@ -872,6 +879,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
             $reportYear = date("Y", strtotime($startDate));
         };
         $settings = CRM_Irasdonation_Utils::getSettings();
+        $prefix = CRM_Utils_Array::value(CRM_Irasdonation_Utils::PREFIX['slug'], $settings);
         $organisation_id = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_ID['slug'], $settings);
         $min_amount = CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
 
@@ -902,7 +910,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
       cont.sort_name, 
       cont.external_identifier,
       cdnlog.receipt_amount,
-      RIGHT(cdnlog.receipt_no, 10) receipt_no,
+      CONCAT('$prefix', LPAD(RIGHT(cdnlogcontrib.contribution_id, 7), 7, 0)) receipt_no,
       FROM_UNIXTIME(cdnlog.issued_on) issued_on,
       contrib.receive_date
       FROM cdntaxreceipts_log cdnlog 

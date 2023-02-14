@@ -62,6 +62,7 @@ class CRM_Irasdonation_Upgrader extends CRM_Irasdonation_Upgrader_Base {
        $settings[U::IRAS_API_URL['slug']] = "https://apisandbox.iras.gov.sg/iras/sb";
        $settings[U::CALLBACK_URL['slug']] = "https://asliddin.socialservicesconnect.com/wp-json/iras/v1/report";
        $settings[U::VALIDATE_ONLY['slug']] = 1;
+       $settings[U::PREFIX['slug']] = "OCT";
        $settings[U::MIN_AMOUNT['slug']] = 1;
        CRM_Core_BAO_Setting::setItem($settings, U::SETTINGS_NAME, U::SETTINGS_SLUG);
    }
