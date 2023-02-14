@@ -102,7 +102,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         }
 
 
-        list($totalRows, $total, $counter, $generatedDate, $reportedIDs, $details) = U::prepareReportDetails($startDate, $endDate, $includePrevious);
+        list($totalRows, $total, $counter, $generatedDate, $reportedIDs, $details) = U::prepareOnlineReportDetails($startDate, $endDate, $includePrevious);
         //get reporting report_url
         if ($totalRows > 5000) {
             CRM_Core_Session::setStatus('You have more than 5000 records, please select smaller period of time', ts('Date range incorrect'), 'warning', array('expires' => 5000));

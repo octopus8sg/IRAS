@@ -66,34 +66,41 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
     $offset = CRM_Utils_Request::retrieveValue('iDisplayStart', 'Positive', 0);
     $limit = CRM_Utils_Request::retrieveValue('iDisplayLength', 'Positive', 10);
 
-    $wword = "UPPER(cdnlog.receipt_status)='ISSUED'";
+    $where = " UPPER(cdnlog.receipt_status)='ISSUED' ";
 
     //0 - offline
     //1 - online
     if ($params[$method] != null) {
       switch ($params[$method]) {
         case 1:
-          $wword .= " AND cdnlog.id NOT IN (select t_don.cdntaxreceipts_log_id from  civicrm_o8_iras_donation t_don)";
+          $where .= " AND cdnlog.id NOT IN (select iras_don.cdntaxreceipts_log_id from civicrm_o8_iras_donation iras_don)";
           break;
         case 2:
-          $wword .= " AND donation.is_api = 0";
+          $where .= " AND donation.is_api = 0";
           break;
         case 3:
-          $wword .= " AND donation.is_api = 1";
+          $where .= " AND donation.is_api = 1";
           break;
       }
     }
 
     if ($params[$sent_response] != null) {
-      $wword .= " AND ilog.response_code = $params[$sent_response]";
+      $where .= " AND ilog.response_code = $params[$sent_response]";
     }
 
-    if ($params[$transaction_range_start_date] != null || $params[$transaction_range_end_date] != null) {
-      $wword .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$params[$transaction_range_start_date]' AND FROM_UNIXTIME(cdnlog.issued_on) <= '$params[$transaction_range_end_date]'";
+    if ($params[$transaction_range_start_date] != null ) {
+      $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$params[$transaction_range_start_date]'";
+    }
+    if ($params[$transaction_range_end_date] != null) {
+      $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) <= '$params[$transaction_range_end_date]'";
     }
 
-    if ($params[$sent_range_start_date] != null || $params[$sent_range_end_date] != null) {
-      $wword .= " AND donation.created_date >= '$params[$sent_range_start_date]' AND donation.created_date <= '$params[$sent_range_end_date]'";
+    if ($params[$sent_range_start_date] != null ) {
+      $where .= " AND donation.created_date >= '$params[$sent_range_start_date]' ";
+    }
+
+    if ($params[$sent_range_end_date] != null) {
+      $where .= " AND donation.created_date <= '$params[$sent_range_end_date]'";
     }
 
 
@@ -132,7 +139,7 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
               WHERE id IN ( SELECT MAX(tdon.id) FROM civicrm_o8_iras_donation tdon GROUP BY tdon.cdntaxreceipts_log_id)
             ) donation ON donation.cdntaxreceipts_log_id = cdnlog.id
             LEFT JOIN civicrm_o8_iras_response_log ilog ON ilog.id = donation.log_id
-        WHERE $wword
+        WHERE $where
             ";
 
     if ($sort !== NULL) {

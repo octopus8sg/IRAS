@@ -2,8 +2,6 @@
 
 use CRM_Irasdonation_ExtensionUtil as E;
 
-use \Firebase\JWT\JWT;
-
 class CRM_Irasdonation_Utils
 {
     public const SAVE_LOG = [
@@ -117,6 +115,13 @@ class CRM_Irasdonation_Utils
         $session = CRM_Core_Session::singleton();
         $code = CRM_Utils_Request::retrieveValue('code', 'String', null);
         $state = CRM_Utils_Request::retrieveValue('state', 'String', null);
+        self::writeLog($code, 'code');
+        self::writeLog($state, 'state');
+        $selfstate = $session->get(self::STATE);
+        if($selfstate != $state){
+            print_r(['code' => $code, 'state' => $state]);
+            return print_r(['code' => $code, 'state' => $state], true);
+        }
         $url = self::getIrasTokenURL();
         $redirectUrl = $session->popUserContext();
         $callbackUrl = self::getCallbackURL();
@@ -664,11 +669,10 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
      * @param $includePrevious
      * @return array|void
      */
-    public static function prepareReportDetails($startDate, $endDate, $includePrevious)
+    public static function prepareOnlineReportDetails($startDate, $endDate, $includePrevious)
     {
-
-
-        $reportYear = date("Y");
+        $settings = self::getSettings();
+        $min_amount= CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
 
 
         $where = "UPPER(cdnlog.receipt_status)='ISSUED'";
@@ -678,10 +682,15 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         (SELECT iras_donation.cdntaxreceipts_log_id FROM civicrm_o8_iras_donation iras_donation 
         WHERE iras_donation.created_date IS NOT NULL) ";
         }
-        if ($startDate != null && $endDate != null) {
-            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$startDate' AND FROM_UNIXTIME(cdnlog.issued_on) <= '$endDate'";
+        if ($startDate != null ) {
+            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$startDate'";
         }
-
+        if ($endDate != null) {
+            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) <= '$endDate'";
+        }
+        if ($min_amount != null) {
+            $where .= " AND cdnlog.receipt_amount >= $min_amount";
+        }
 
         //generate header of report
         $sql = "SELECT
@@ -828,6 +837,121 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
             throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
         }
         return $decoded;
+    }
+
+    public static function generateCsv($csvData)
+    {
+        $f = fopen('php://output', 'w');
+
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="report_' . date('dmY_His') . '.csv";');
+
+        foreach ($csvData as $row) {
+            fputcsv($f, $row, ",", '\'', "\\");
+        }
+        // fseek($f, 0);
+
+        fclose($f);
+        // $file = fpassthru($f);
+
+    }
+
+    /**
+     * @param string $reportYear
+     * @param $organisation_id
+     * @param $startDate
+     * @param $endDate
+     * @param $includePrevious
+     * @param $settings
+     * @return array
+     */
+    public static function prepareOfflineReportDetails($startDate, $endDate, $includePrevious)
+    {
+        $reportYear = date("Y");
+        if ($startDate != null) {
+            $reportYear = date("Y", strtotime($startDate));
+        };
+        $settings = CRM_Irasdonation_Utils::getSettings();
+        $organisation_id = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_ID['slug'], $settings);
+        $min_amount = CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
+
+        $csvData = array();
+        $dataBody = array();
+        $dataHead = [0, 7, $reportYear, 7, 0, $organisation_id, null, null, null, null, null, null, null, null];
+        array_push($csvData, $dataHead);
+
+        $where = "UPPER(cdnlog.receipt_status)='ISSUED'";
+
+        if ($includePrevious == 0) {
+            $where .= " AND cdnlog.id NOT IN 
+        (SELECT iras_donation.cdntaxreceipts_log_id FROM civicrm_o8_iras_donation iras_donation 
+        WHERE iras_donation.created_date IS NOT NULL) ";
+        }
+        if ($startDate != null ) {
+            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$startDate'";
+        }
+        if ($endDate != null) {
+            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) <= '$endDate'";
+        }
+        if ($min_amount != null) {
+            $where .= " AND cdnlog.receipt_amount >= $min_amount";
+        }
+
+        $sql = "SELECT 
+      cdnlog.id, 
+      cont.sort_name, 
+      cont.external_identifier,
+      cdnlog.receipt_amount,
+      RIGHT(cdnlog.receipt_no, 10) receipt_no,
+      FROM_UNIXTIME(cdnlog.issued_on) issued_on,
+      contrib.receive_date
+      FROM cdntaxreceipts_log cdnlog 
+      INNER JOIN cdntaxreceipts_log_contributions cdnlogcontrib ON cdnlogcontrib.receipt_id = cdnlog.id
+      INNER JOIN civicrm_contribution contrib ON contrib.id = cdnlogcontrib.contribution_id  
+      INNER JOIN civicrm_contact cont ON cont.id = cdnlog.contact_id 
+      INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id   
+      WHERE $where
+      LIMIT 5000";
+
+        $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
+
+        $insert = '';
+        $total = 0;
+        $counter = 0;
+        $genDate = date('Y-m-d H:i:s');
+        $saveReport = array();
+
+        //generate body of th report
+        while ($result->fetch()) {
+
+            $idType = CRM_Irasdonation_Utils::parsUENNumber($result->external_identifier);
+            if ($idType > 0) {
+                $dataBody = [1,
+                    $idType,
+                    $result->external_identifier,
+                    str_replace(',', '', $result->sort_name),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    $result->receipt_amount,
+                    date("Ymd", strtotime($result->issued_on)),
+                    $result->receipt_no,
+                    'O',
+                    'Z'];
+                array_push($saveReport, $result->id);
+
+                array_push($csvData, $dataBody);
+                $total += $result->receipt_amount;
+                $counter++;
+            }
+        }
+
+        //generate buttom line of the report
+        $dataBottom = [2, $counter, $total, null, null, null, null, null, null, null, null, null, null, null];
+        array_push($csvData, $dataBottom);
+        return array($csvData, $genDate, $saveReport, $dataBody);
     }
 
 }
