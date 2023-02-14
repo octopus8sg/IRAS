@@ -144,7 +144,8 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         if ($decoded != null) {
             $log_id = 0;
 
-            $insert = "INSERT INTO civicrm_o8_iras_response_log(response_body, response_code, created_date) VALUES ('" . $decoded . "', $returnCode, '$generatedDate');";
+            $insert = "INSERT INTO civicrm_o8_iras_response_log(response_body, response_code, created_date) VALUES ('"
+                . json_encode($decoded) . "', $returnCode, '$generatedDate');";
             CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
             $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
 
