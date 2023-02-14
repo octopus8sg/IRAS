@@ -117,17 +117,62 @@ class CRM_Irasdonation_Utils
 //        try {
         $code = CRM_Utils_Request::retrieveValue('code', 'String', null);
         $state = CRM_Utils_Request::retrieveValue('state', 'String', null);
-        $json = "{'code': '$code', 'state': '$state'}";
-        self::writeLog($json, "json");
-
-//            CRM_Utils_JSON::output("{'code': '$code', 'state': '$state'}");
-        self::writeLog($json, "json2");
         $session = CRM_Core_Session::singleton();
-//            CRM_Core_BAO_Navigation::resetNavigation();
+        $url = self::getIrasTokenURL();
         $redirectUrl = $session->popUserContext();
+
+        $body = array(
+            'code' => $code,
+            'scope' => 'DonationSub',
+            'callback_url' => self::getCallbackURL(),
+            'state' => $state,
+        );
+        $client = new GuzzleHttp\Client();
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
+        $clientID = self::getClientID();
+        self::writeLog($clientID, "clientID");
+        $clientSecret = self::getClientSecret();
+        self::writeLog($clientSecret, "clientSecret");
+//        try {
+            $response = $client->post($url, [
+                'user_agent' => $user_agent,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'X-IBM-Client-Secret' => $clientSecret,
+                    'X-IBM-Client-Id' => $clientID,
+                    'X-VPS-Timeout' => '45',
+                    'X-VPS-Timeout' => '45',
+                    'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
+                ],
+                'json' => $body
+            ]);
+            self::writeLog($body, "body");
+            self::writeLog(json_decode($response->getBody(), true));
+//        } catch (GuzzleHttp\Exception\GuzzleException $e) {
+//            CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
+//            throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
+//        } catch (Exception $e) {
+//            CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
+//            throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
+//        }
+        $loginresponse = $response->getBody();
+        try {
+            $decoded = json_decode($loginresponse, true);
+        } catch (Exception $e) {
+            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+        }
+        try {
+            $access_token = $decoded['data']['token'];
+        } catch (Exception $e) {
+            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+        }
         $now = time();
-        $session->set(SELF::ACCESSTOKEN, "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Il9SQzZ4d09NdmJ0dDZhald1WmU2R2xncy1qM3dtNXJpQXlDVW9SYXNhLUkifQ");
+
+        $session->set(SELF::ACCESSTOKEN, $access_token);
+        self::writeLog($access_token, "access_token");
         $session->set(SELF::LOGINTIME, $now);
+
         self::writeLog($redirectUrl, "redirect_url");
         CRM_Utils_System::redirect($redirectUrl);
 //        } catch (Exception $e) {
@@ -206,6 +251,39 @@ class CRM_Irasdonation_Utils
         try {
             $result = self::getSettings(self::IRAS_API_URL['slug']);
             $result = $result . "/Authentication/CorpPassAuth";
+            return $result;
+        } catch (\Exception $exception) {
+            $error_message = $exception->getMessage();
+            $error_title = 'Iras Login Config Required';
+            self::showErrorMessage($error_message, $error_title);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public static function getIrasReportURL()
+    {
+        $result = false;
+        try {
+            $result = self::getSettings(self::IRAS_API_URL['slug']);
+            $result = $result . "/DonationCP/submit";
+            return $result;
+        } catch (\Exception $exception) {
+            $error_message = $exception->getMessage();
+            $error_title = 'Iras Login Config Required';
+            self::showErrorMessage($error_message, $error_title);
+        }
+    }
+    /**
+     * @return bool
+     */
+    public static function getIrasTokenURL()
+    {
+        $result = false;
+        try {
+            $result = self::getSettings(self::IRAS_API_URL['slug']);
+            $result = $result . "/Authentication/CorpPassToken";
             return $result;
         } catch (\Exception $exception) {
             $error_message = $exception->getMessage();
@@ -702,12 +780,15 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
     public static function prepareHeader($client_id, $client_secret, string $access_token): array
     {
         $header = [
-            "Accept: application/json",
-            "charset: UTF-8",
-            "Content-Type: application/json",
-            "X-IBM-Client-Id: $client_id",
-            "X-IBM-Client-Secret: $client_secret",
-            "access_token: $access_token",
+            "Accept" => "application/json",
+            "charset" => "utf-8",
+            "Content-Type" => "application/json",
+            "X-IBM-Client-Id" => $client_id,
+            "X-IBM-Client-Secret" => $client_secret,
+            "access_token" => $access_token,
+            'X-VPS-Timeout' => '45',
+            'X-VPS-Timeout' => '45',
+            'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
         ];
         return $header;
     }
@@ -738,7 +819,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
 
 
         //generate header of report
-        $sql = "SELECT SQL_CALC_FOUND_ROWS
+        $sql = "SELECT
     cdnlog.id cdnlog_id, 
     contact.sort_name contact_sort_name, 
     contact.external_identifier contact_external_identifier,
@@ -759,7 +840,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         self::writeLog($sql, "sql");
         $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
 
-        $totalRows = CRM_Core_DAO::singleValueQuery("SELECT FOUND_ROWS()");
+        $totalRows = 100;
         $insert = '';
         $total = 0;
         $counter = 0;

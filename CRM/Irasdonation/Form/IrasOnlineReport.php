@@ -30,7 +30,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         if (!$iras_access_token) {
             $iras_logged = false;
         }
-        if ($iras_login_time_diff > 30) {
+        if ($iras_login_time_diff > 300) {
             $iras_logged = false;
         }
         if (!$iras_logged) {
@@ -116,13 +116,15 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             CRM_Core_Session::setStatus('You have more than 5000 records, please select smaller period of time', ts('Date range incorrect'), 'warning', array('expires' => 5000));
         }
         //prepare header
-        $client_id = CRM_Utils_Array::value(U::CLIENT_ID['slug'], $settings);
-        $client_secret = CRM_Utils_Array::value(U::CLIENT_SECRET['slug'], $settings);
-        $access_token = "";
-        $header = U::prepareHeader($client_id, $client_secret, $access_token);
+        $client_id = U::getClientID();
+        $client_secret = U::getClientSecret();
+        $session = CRM_Core_Session::singleton();
+        $iras_access_token = $session->get(U::ACCESSTOKEN);
+        $header = U::prepareHeader($client_id, $client_secret, $iras_access_token);
+        U::writeLog($iras_access_token, "iras_access_token");
 
         //prepare body
-        $report_url = CRM_Utils_Array::value(U::REPORT_URL['slug'], $settings);
+        $report_url = U::getIrasReportURL();
 
 
         $body = U::prepareBody($reportYear, $counter, $total, $details);
@@ -131,29 +133,36 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         U::writeLog($header, "prepared_header");
         U::writeLog($report_url, "report_url");
         $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
-        $session = CRM_Core_Session::singleton();
+
         $session->pushUserContext($url);
-        return;
 
         $response = null;
         if ($counter > 0) {
-            $response = $this->curl_post($report_url, $header, $body);
+            $client = new GuzzleHttp\Client();
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
+            $response = $client->post($report_url, [
+                'user_agent' => $user_agent,
+                'headers' => $header,
+                'json' => $body
+            ]);
             $sentMessage = '';
-            $sentMessage .= $response->info->message;
-            if ($response->info->fieldInfoList != null)
-                $sentMessage .= ' > ' . json_encode($response->info->fieldInfoList);
+            $sentMessage .= $response->getStatusCode();
+            $loginresponse = $response->getBody();
+            $decoded = json_decode($loginresponse, true);
 
-            if ($response->returnCode == 10) {
+            $sentMessage .= ' > ' . json_encode($loginresponse);
+
+            if ($loginresponse->returnCode == 10) {
                 CRM_Core_Session::setStatus('Data sucessfully sent to IRAS', ts('Report sending status'), 'success', array('expires' => 5000));
             } else {
                 CRM_Core_Session::setStatus($sentMessage, ts('Report sending status'), 'error', array('expires' => 5000));
             }
         } else CRM_Core_Session::setStatus('No data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
 
-        if ($response != null) {
+        if ($loginresponse != null) {
             $log_id = 0;
 
-            $insert = "INSERT INTO civicrm_o8_iras_response_log(response_body, response_code, created_date) VALUES ('" . json_encode($response) . "', $response->returnCode, '$generatedDate');";
+            $insert = "INSERT INTO civicrm_o8_iras_response_log(response_body, response_code, created_date) VALUES ('" . json_encode($loginresponse) . "', $loginresponse->returnCode, '$generatedDate');";
             CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
             $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
 
