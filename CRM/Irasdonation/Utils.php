@@ -114,59 +114,26 @@ class CRM_Irasdonation_Utils
 
     public static function callbackUrl()
     {
-//        try {
+        $session = CRM_Core_Session::singleton();
         $code = CRM_Utils_Request::retrieveValue('code', 'String', null);
         $state = CRM_Utils_Request::retrieveValue('state', 'String', null);
-        $session = CRM_Core_Session::singleton();
         $url = self::getIrasTokenURL();
         $redirectUrl = $session->popUserContext();
-
+        $callbackUrl = self::getCallbackURL();
         $body = array(
             'code' => $code,
             'scope' => 'DonationSub',
-            'callback_url' => self::getCallbackURL(),
+            'callback_url' => $callbackUrl,
             'state' => $state,
         );
-        $client = new GuzzleHttp\Client();
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
-        $clientID = self::getClientID();
-        self::writeLog($clientID, "clientID");
-        $clientSecret = self::getClientSecret();
-        self::writeLog($clientSecret, "clientSecret");
-//        try {
-            $response = $client->post($url, [
-                'user_agent' => $user_agent,
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                    'X-IBM-Client-Secret' => $clientSecret,
-                    'X-IBM-Client-Id' => $clientID,
-                    'X-VPS-Timeout' => '45',
-                    'X-VPS-Timeout' => '45',
-                    'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
-                ],
-                'json' => $body
-            ]);
-            self::writeLog($body, "body");
-            self::writeLog(json_decode($response->getBody(), true));
-//        } catch (GuzzleHttp\Exception\GuzzleException $e) {
-//            CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
-//            throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
-//        } catch (Exception $e) {
-//            CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
-//            throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
-//        }
-        $loginresponse = $response->getBody();
-        try {
-            $decoded = json_decode($loginresponse, true);
-        } catch (Exception $e) {
-            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
-        }
+        $header = self::prepareHeader();
+        $decoded = self::guzzlePost($url, $header, $body);
         try {
             $access_token = $decoded['data']['token'];
         } catch (Exception $e) {
-            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+            throw new CRM_Core_Exception('No token in a JSON in Response error: ' . $e->getMessage());
         }
+
         $now = time();
 
         $session->set(SELF::ACCESSTOKEN, $access_token);
@@ -175,22 +142,9 @@ class CRM_Irasdonation_Utils
 
         self::writeLog($redirectUrl, "redirect_url");
         CRM_Utils_System::redirect($redirectUrl);
-//        } catch (Exception $e) {
-//            self::writeLog($e->getMessage());
-//        }
     }
 
 
-    /**
-     * @param $irasLoginURL
-     */
-    public static function gotoIrasLoginURL($irasLoginURL): void
-    {
-        $template = CRM_Core_Smarty::singleton();
-        $tpl = 'CRM/Irasdonation/Page/IrasLogin.tpl';
-        $template->assign('irasLoginURL', $irasLoginURL);
-        print $template->fetch($tpl);
-    }    
     /**
      * @param $input
      * @param $preffix_log
@@ -245,6 +199,25 @@ class CRM_Irasdonation_Utils
     /**
      * @return bool
      */
+    public static function getValidateOnly(): bool
+    {
+        $result = false;
+        try {
+            $result_ = self::getSettings(self::VALIDATE_ONLY['slug']);
+            if ($result_ == 1) {
+                $result = true;
+            }
+            return $result;
+        } catch (\Exception $exception) {
+            $error_message = $exception->getMessage();
+            $error_title = 'Validate Only Config Required';
+            self::showErrorMessage($error_message, $error_title);
+        }
+    }
+
+    /**
+     * @return bool
+     */
     public static function getIrasLoginURL()
     {
         $result = false;
@@ -275,6 +248,7 @@ class CRM_Irasdonation_Utils
             self::showErrorMessage($error_message, $error_title);
         }
     }
+
     /**
      * @return bool
      */
@@ -308,63 +282,9 @@ class CRM_Irasdonation_Utils
         }
     }
 
-//    /**
-//     * @return bool
-//     */
-//    public static function getSendContact(): bool
-//    {
-//        $result = false;
-//        try {
-//            $result_ = self::getSettings(self::SEND_CONTACT);
-//            if ($result_ == 1) {
-//                $result = true;
-//            }
-//            return $result;
-//        } catch (\Exception $exception) {
-//            $error_message = $exception->getMessage();
-//            $error_title = 'Send Contact Config Required';
-//            self::showErrorMessage($error_message, $error_title);
-//        }
-//    }
-//
-//    /**
-//     * @return bool
-//     */
-//    public static function getSendContribution(): bool
-//    {
-//        $result = false;
-//        try {
-//            $result_ = self::getSettings(self::SEND_CONTRIBUTION);
-//            if ($result_ == 1) {
-//                $result = true;
-//            }
-//            return $result;
-//        } catch (\Exception $exception) {
-//            $error_message = $exception->getMessage();
-//            $error_title = 'Send Contribution Config Required';
-//            self::showErrorMessage($error_message, $error_title);
-//        }
-//    }
-
-
-//    /**
-//     * @return string
-//     */
-//
-//    public static function getRefreshToken(): string
-//    {
-//        $result = "";
-//        try {
-//            $result = strval(self::getSettings(self::REFRESH_TOKEN));
-////            self::writeLog($result, 'getValidateUEN');
-//            return $result;
-//        } catch (\Exception $exception) {
-//            $error_message = $exception->getMessage();
-//            $error_title = 'Write Log Config Required';
-//            self::showErrorMessage($error_message, $error_title);
-//        }
-//    }
-
+    /**
+     * @return string
+     */
     public static function getClientID(): string
     {
         $result = "";
@@ -379,7 +299,9 @@ class CRM_Irasdonation_Utils
         }
     }
 
-
+    /**
+     * @return string
+     */
     public static function getClientSecret(): string
     {
         $result = "";
@@ -402,100 +324,46 @@ class CRM_Irasdonation_Utils
      */
     public static function getLoginResponse($url)
     {
-        $client = new GuzzleHttp\Client();
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
         $clientID = self::getClientID();
         self::writeLog($clientID, "clientID");
         $clientSecret = self::getClientSecret();
         self::writeLog($clientSecret, "clientSecret");
         self::writeLog($url, "url");
-        try {
-            $response = $client->request('GET', $url, [
-                'user_agent' => $user_agent,
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                    'X-IBM-Client-Secret' => $clientSecret,
-                    'X-IBM-Client-Id' => $clientID,
-                    'X-VPS-Timeout' => '45',
-                    'X-VPS-Timeout' => '45',
-                    'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
-                ],
-            ]);
-        } catch (GuzzleHttp\Exception\GuzzleException $e) {
-            CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
-            throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
-        } catch (Exception $e) {
-            CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
-            throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
-        }
-        return $response->getBody();
+        $header = self::prepareHeader();
+        $decodedresponse = self::guzzleGet($url, $header);
+        return $decodedresponse;
     }
 
-//    public static function getRedirectURI(): string
+//    /**
+//     * @return mixed
+//     */
+//    public static function getAccessToken()
 //    {
-//        $result = "";
-//        try {
-//            $result = strval(self::getSettings(self::REDIRECT_URI));
-////            self::writeLog($result, 'getValidateUEN');
-//            return $result;
-//        } catch (\Exception $exception) {
-//            $error_message = $exception->getMessage();
-//            $error_title = 'Write Log Config Required';
-//            self::showErrorMessage($error_message, $error_title);
-//        }
-//    }
+//        $url = self::getAccessTokenURL();
+//        $client = new GuzzleHttp\Client();
+//        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
 //
-//    public static function getAccessTokenURL(): string
-//    {
-//        $refresh_token = self::getRefreshToken();
-//        $client_id = self::getClientID();
-//        $client_secret = self::getClientSecret();
-//        $redirect_uri = self::getRedirectURI();
-//        if ($refresh_token == "") return "";
-//        if ($client_id == "") return "";
-//        if ($client_secret == "") return "";
-//        if ($redirect_uri == "") return "";
-//        $result = "https://accounts.zoho.com/oauth/v2/token?refresh_token=$refresh_token&client_id=$client_id&client_secret=$client_secret&redirect_uri=$redirect_uri&grant_type=refresh_token";
 //        try {
-//            return $result;
-//        } catch (\Exception $exception) {
-//            $error_message = $exception->getMessage();
-//            $error_title = 'Write Log Config Required';
-//            self::showErrorMessage($error_message, $error_title);
+//            $response = $client->request('POST', $url, [
+//                'user_agent' => $user_agent,
+//                'headers' => [
+//                    'Accept' => 'text/plain',
+//                    'Content-Type' => 'application/*+json',
+//                    'X-VPS-Timeout' => '45',
+//                    'X-VPS-VIT-Integration-Product' => 'CiviCRM',
+//                    'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
+//                ],
+//            ]);
+//            $decoded = json_decode($response->getBody(), true);
+//        } catch (GuzzleHttp\Exception\GuzzleException $e) {
+//            CRM_Core_Error::statusBounce('Dnszoho Error: Request error ', null, $e->getMessage());
+//            throw new CRM_Core_Exception('Dnszoho Error: Request error: ' . $e->getMessage());
+//        } catch (Exception $e) {
+//            CRM_Core_Error::statusBounce('Dnszoho Error: Another error: ', null, $e->getMessage());
+//            throw new CRM_Core_Exception('Dnszoho Error: Another error: ' . $e->getMessage());
 //        }
+//        return $decoded['access_token'];
 //    }
-
-    /**
-     * @return mixed
-     */
-    public static function getAccessToken()
-    {
-        $url = self::getAccessTokenURL();
-        $client = new GuzzleHttp\Client();
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
-
-        try {
-            $response = $client->request('POST', $url, [
-                'user_agent' => $user_agent,
-                'headers' => [
-                    'Accept' => 'text/plain',
-                    'Content-Type' => 'application/*+json',
-                    'X-VPS-Timeout' => '45',
-                    'X-VPS-VIT-Integration-Product' => 'CiviCRM',
-                    'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
-                ],
-            ]);
-            $decoded = json_decode($response->getBody(), true);
-        } catch (GuzzleHttp\Exception\GuzzleException $e) {
-            CRM_Core_Error::statusBounce('Dnszoho Error: Request error ', null, $e->getMessage());
-            throw new CRM_Core_Exception('Dnszoho Error: Request error: ' . $e->getMessage());
-        } catch (Exception $e) {
-            CRM_Core_Error::statusBounce('Dnszoho Error: Another error: ', null, $e->getMessage());
-            throw new CRM_Core_Exception('Dnszoho Error: Another error: ' . $e->getMessage());
-        }
-        return $decoded['access_token'];
-    }
 
 
     /**
@@ -725,19 +593,12 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
 
     /**
      * @param string $reportYear
-     * @param $organization_type
-     * @param $organisation_id
-     * @param $organisation_name
-     * @param $authorised_person_id
-     * @param $authorised_person_name
-     * @param $authorised_person_designation
-     * @param $authorised_person_phone
-     * @param $authorised_person_email
      * @param $counter
      * @param $total
      * @param $details
      * @return array
      */
+
     public static function prepareBody(string $reportYear, $counter, $total, $details): array
     {
         $settings = CRM_Irasdonation_Utils::getSettings();
@@ -749,10 +610,10 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         $authorised_person_designation = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_DESIGNATION['slug'], $settings);
         $authorised_person_phone = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_PHONE['slug'], $settings);
         $authorised_person_email = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_EMAIL['slug'], $settings);
-
+        $validateOnly = self::getValidateOnly();
         $body = array(
             'orgAndSubmissionInfo' => [
-                'validateOnly' => 'true',
+                'validateOnly' => $validateOnly,
                 'basisYear' => $reportYear,
                 'organisationIDType' => $organization_type,
                 'organisationIDNo' => $organisation_id,
@@ -777,19 +638,23 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
      * @param string $access_token
      * @return array
      */
-    public static function prepareHeader($client_id, $client_secret, string $access_token): array
+    public static function prepareHeader(string $access_token = null): array
     {
+        $client_id = self::getClientID();
+        $client_secret = self::getClientSecret();
         $header = [
             "Accept" => "application/json",
             "charset" => "utf-8",
             "Content-Type" => "application/json",
             "X-IBM-Client-Id" => $client_id,
             "X-IBM-Client-Secret" => $client_secret,
-            "access_token" => $access_token,
             'X-VPS-Timeout' => '45',
             'X-VPS-Timeout' => '45',
             'X-VPS-Request-ID' => strval(rand(1, 1000000000)),
         ];
+        if ($access_token) {
+            $header["access_token"] = $access_token;
+        }
         return $header;
     }
 
@@ -874,11 +739,95 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                 array_push($reportedIDs, $result->cdnlog_id);
 
                 array_push($details, $dataBody);
-                $total += $result->receipt_amount;
+                $total += $result->cdnlog_receipt_amount;
                 $counter++;
             }
         }
         return array($totalRows, $total, $counter, $generatedDate, $reportedIDs, $details);
+    }
+
+    /**
+     * @param string $url
+     * @param array $header
+     * @param array $body
+     * @return array
+     */
+    public static function guzzlePost(string $url, array $header, array $body): array
+    {
+        try {
+            $client = new GuzzleHttp\Client();
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
+            $response = $client->post($url, [
+                'user_agent' => $user_agent,
+                'headers' => $header,
+                'json' => $body
+            ]);
+            self::writeLog($header, "guzzlePostheader");
+            self::writeLog(json_encode($body), "guzzlePostbody");
+        } catch (GuzzleHttp\Exception\GuzzleException $e) {
+            self::writeLog($e->getMessage(), 'Error: Request error ');
+            CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
+            throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            self::writeLog($e->getMessage(), 'Error: Another error: ' );
+            CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
+            throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
+        }
+        try {
+            $responsebody = $response->getBody();
+            self::writeLog($responsebody, 'guzzlePostrespobody');
+        } catch (Exception $e) {
+            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+        }
+
+        try {
+            $decoded = json_decode($responsebody, true);
+            self::writeLog($decoded, 'decodedguzzlePost');
+        } catch (Exception $e) {
+            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+        }
+        return $decoded;
+    }
+
+    /**
+     * @param string $url
+     * @param array $header
+     * @param array $body
+     * @return array
+     */
+    public static function guzzleGet(string $url, array $header): array
+    {
+        try {
+            $client = new GuzzleHttp\Client();
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
+            $response = $client->get($url, [
+                'user_agent' => $user_agent,
+                'headers' => $header
+            ]);
+            self::writeLog($header, "guzzleGetheader");
+        } catch (GuzzleHttp\Exception\GuzzleException $e) {
+            self::writeLog($e->getMessage(), 'Error: Request error ');
+            CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
+            throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            self::writeLog($e->getMessage(), 'Error: Another error: ' );
+            CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
+            throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
+        }
+        try {
+            $responsebody = $response->getBody();
+            self::writeLog($responsebody, 'guzzlePostrespobody');
+        } catch (Exception $e) {
+            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+        }
+
+        try {
+            $decoded = json_decode($responsebody, true);
+            self::writeLog($decoded, 'decodedguzzlePost');
+        } catch (Exception $e) {
+            throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+        }
+        return $decoded;
     }
 
 }

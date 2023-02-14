@@ -17,44 +17,41 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
         $session = CRM_Core_Session::singleton();
         $session->pushUserContext($url);
-        $iras_access_token = $session->get(U::ACCESSTOKEN);
-        U::writeLog($iras_access_token, "iras_access_token");
-        $iras_login_time = $session->get(U::LOGINTIME);
-        U::writeLog($iras_login_time, "iras_login_time");
-        $iras_login_time_diff = time() - $iras_login_time;
-        U::writeLog($iras_login_time_diff, "iras_login_time_diff");
-        $irasLoginURL = U::getIrasLoginURL();
-        $callbackURL = U::getCallbackURL();
-        $iras_logged = true;
+        if (!U::getValidateOnly()) {
+            $iras_access_token = $session->get(U::ACCESSTOKEN);
+            U::writeLog($iras_access_token, "iras_access_token");
+            $iras_login_time = $session->get(U::LOGINTIME);
+            U::writeLog($iras_login_time, "iras_login_time");
+            $iras_login_time_diff = time() - $iras_login_time;
+            U::writeLog($iras_login_time_diff, "iras_login_time_diff");
+            $irasLoginURL = U::getIrasLoginURL();
+            $callbackURL = U::getCallbackURL();
+            $iras_logged = true;
 //        CRM_Core_Error::debug_var('decoded', $decoded);
-        if (!$iras_access_token) {
-            $iras_logged = false;
-        }
-        if ($iras_login_time_diff > 300) {
-            $iras_logged = false;
-        }
-        if (!$iras_logged) {
-            $state = uniqid();
-            $session->set(U::STATE, $state);
-            $irasLoginFullURL = "$irasLoginURL?scope=DonationSub&callback_url=$callbackURL&tax_agent=false&state=$state";
-            U::writeLog($irasLoginFullURL, 'irasLoginFullURL');
-            $loginresponse = U::getLoginResponse($irasLoginFullURL);
-            U::writeLog(json_decode($loginresponse), 'loginresponse');
-            try {
-                $decoded = json_decode($loginresponse, true);
-            } catch (Exception $e) {
-                throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+            if (!$iras_access_token) {
+                $iras_logged = false;
             }
-            try {
-                $irasLoginRealURL = $decoded['data']['url'];
-            } catch (Exception $e) {
-                throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+            if ($iras_login_time_diff > 300) {
+                $iras_logged = false;
             }
-            U::writeLog($irasLoginRealURL, 'irasLoginRealURL');
-            CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
-            CRM_Utils_System::redirect($irasLoginRealURL);
-            CRM_Utils_System::civiExit();
-            exit;
+            if (!$iras_logged) {
+                $state = uniqid();
+                $session->set(U::STATE, $state);
+                $irasLoginFullURL = "$irasLoginURL?scope=DonationSub&callback_url=$callbackURL&tax_agent=false&state=$state";
+                U::writeLog($irasLoginFullURL, 'irasLoginFullURL');
+                $loginresponse = U::getLoginResponse($irasLoginFullURL);
+
+                try {
+                    $irasLoginRealURL = $loginresponse['data']['url'];
+                } catch (Exception $e) {
+                    throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
+                }
+                U::writeLog($irasLoginRealURL, 'irasLoginRealURL');
+                CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
+                CRM_Utils_System::redirect($irasLoginRealURL);
+                CRM_Utils_System::civiExit();
+                exit;
+            }
         }
         //start report from
         $this->add('datepicker', 'start_date', ts('Start date'), [], FALSE, ['time' => FALSE]);
@@ -89,23 +86,18 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         }
 
         $values = $this->exportValues();
-        $startDate = $values["start_date"];
-        $endDate = $values["end_date"];
+        $firstDayOfYear = date('Y-01-01');
+        $lastDayOfYear = date('Y-12-t');
+        $startDate = CRM_Utils_Array::value('start_date', $values, $firstDayOfYear);
+        $endDate = CRM_Utils_Array::value('end_date', $values, $lastDayOfYear);
         $includePrevious = $values["include_previous"];
         $reportYear = date("Y");
-
-
         if ($startDate != null) {
             $reportYear = date("Y", strtotime($startDate));
         };
 
         if (date("Y", strtotime($endDate)) != date("Y", strtotime($startDate))) {
             CRM_Core_Session::setStatus('Selected Date must be in the same year', ts('Date range incorrect'), 'warning', array('expires' => 5000));
-            return;
-        }
-
-        if ($endDate == null || $startDate == null) {
-            CRM_Core_Session::setStatus('Please select date range', ts('Date range incorrect'), 'warning', array('expires' => 5000));
             return;
         }
 
@@ -116,17 +108,16 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             CRM_Core_Session::setStatus('You have more than 5000 records, please select smaller period of time', ts('Date range incorrect'), 'warning', array('expires' => 5000));
         }
         //prepare header
-        $client_id = U::getClientID();
-        $client_secret = U::getClientSecret();
         $session = CRM_Core_Session::singleton();
-        $iras_access_token = $session->get(U::ACCESSTOKEN);
-        $header = U::prepareHeader($client_id, $client_secret, $iras_access_token);
-        U::writeLog($iras_access_token, "iras_access_token");
+        $header = U::prepareHeader();
+        if (!U::getValidateOnly()) {
+            $iras_access_token = $session->get(U::ACCESSTOKEN);
+            $header = U::prepareHeader($iras_access_token);
+            U::writeLog($iras_access_token, "iras_access_token");
+        }
 
         //prepare body
         $report_url = U::getIrasReportURL();
-
-
         $body = U::prepareBody($reportYear, $counter, $total, $details);
         U::writeLog($details, "prepared_details");
         U::writeLog($body, "prepared_body");
@@ -138,31 +129,22 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
 
         $response = null;
         if ($counter > 0) {
-            $client = new GuzzleHttp\Client();
-            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Guzzle';
-            $response = $client->post($report_url, [
-                'user_agent' => $user_agent,
-                'headers' => $header,
-                'json' => $body
-            ]);
-            $sentMessage = '';
-            $sentMessage .= $response->getStatusCode();
-            $loginresponse = $response->getBody();
-            $decoded = json_decode($loginresponse, true);
 
-            $sentMessage .= ' > ' . json_encode($loginresponse);
+            $decoded = U::guzzlePost($report_url, $header, $body);
 
-            if ($loginresponse->returnCode == 10) {
+            $sentMessage = ' > ' . json_encode($decoded);
+            $returnCode = $decoded['returnCode'];
+            if ($returnCode == 10) {
                 CRM_Core_Session::setStatus('Data sucessfully sent to IRAS', ts('Report sending status'), 'success', array('expires' => 5000));
             } else {
                 CRM_Core_Session::setStatus($sentMessage, ts('Report sending status'), 'error', array('expires' => 5000));
             }
         } else CRM_Core_Session::setStatus('No data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
 
-        if ($loginresponse != null) {
+        if ($decoded != null) {
             $log_id = 0;
 
-            $insert = "INSERT INTO civicrm_o8_iras_response_log(response_body, response_code, created_date) VALUES ('" . json_encode($loginresponse) . "', $loginresponse->returnCode, '$generatedDate');";
+            $insert = "INSERT INTO civicrm_o8_iras_response_log(response_body, response_code, created_date) VALUES ('" . $decoded . "', $returnCode, '$generatedDate');";
             CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
             $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
 
