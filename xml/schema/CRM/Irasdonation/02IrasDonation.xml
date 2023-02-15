@@ -21,23 +21,34 @@
   <field>
     <name>contribution_id</name>
     <type>int unsigned</type>
-    <unique>TRUE</unique>
+    <required>false</required>
+    <unique>true</unique>
     <comment>FK to Contribution</comment>
   </field>
   <foreignKey>
     <name>contribution_id</name>
     <table>civicrm_contribution</table>
     <key>id</key>
-    <onDelete>SET NULL</onDelete>
+    <onDelete>CASCADE</onDelete>
   </foreignKey>
+  <index>
+    <name>index_contribution_id</name>
+    <fieldName>contribution_id</fieldName>
+    <unique>true</unique>
+  </index>
 
   <field>
     <name>last_donation_log_id</name>
     <type>int unsigned</type>
     <required>false</required>
-    <unique>false</unique>
+    <unique>true</unique>
     <comment>Last Iras Donation Log</comment>
   </field>
+  <index>
+    <name>index_last_donation_log_id</name>
+    <fieldName>last_donation_log_id</fieldName>
+    <unique>true</unique>
+  </index>
 
   <field>
     <name>created_date</name>

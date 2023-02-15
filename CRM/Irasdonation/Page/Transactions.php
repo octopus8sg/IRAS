@@ -1,6 +1,7 @@
 <?php
 
 use CRM_Irasdonation_ExtensionUtil as E;
+use CRM_Irasdonation_Utils as U;
 
 class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
 {
@@ -37,14 +38,21 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
     {
 
         $settings = CRM_Irasdonation_Utils::getSettings();
+        $min_amount = CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
         $prefix = CRM_Utils_Array::value(CRM_Irasdonation_Utils::PREFIX['slug'], $settings);
         $method = CRM_Utils_Request::retrieveValue('method', 'Positive', null);
         $sent_response = CRM_Utils_Request::retrieveValue('sent_response', 'Positive', null);
-        $transaction_range_start_date = CRM_Utils_Request::retrieveValue('transaction_range_start_date', 'String', null);
-        $transaction_range_end_date = CRM_Utils_Request::retrieveValue('transaction_range_end_date', 'String', null);
+        $firstDayOfYear = date('Y-01-01');
+        $lastDayOfYear = date('Y-12-31');
+
+        $transaction_range_start_date = CRM_Utils_Request::retrieveValue('transaction_range_start_date', 'String', $firstDayOfYear);
+        $transaction_range_end_date = CRM_Utils_Request::retrieveValue('transaction_range_end_date', 'String', $lastDayOfYear);
         $sent_range_start_date = CRM_Utils_Request::retrieveValue('sent_range_start_date', 'String', null);
         $sent_range_end_date = CRM_Utils_Request::retrieveValue('sent_range_end_date', 'String', null);
-
+        $transaction_range_start_date = $transaction_range_start_date ? $transaction_range_start_date : $firstDayOfYear;
+        $transaction_range_end_date = $transaction_range_end_date ? $transaction_range_end_date : $lastDayOfYear;
+        U::writeLog($transaction_range_start_date, "transaction_range_start_date");
+        U::writeLog($firstDayOfYear, "firstDayOfYear");
         $sortMapper = [
             0 => 'receipt_no',
             1 => 'issued_on',
@@ -63,8 +71,8 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
         $offset = CRM_Utils_Request::retrieveValue('iDisplayStart', 'Positive', 0);
         $limit = CRM_Utils_Request::retrieveValue('iDisplayLength', 'Positive', 10);
         //Select contacts with external ID
-        $where = " contact.external_identifier IS NOT NULL ";
-
+        $completed = U::getContributionStatusID('Completed');
+        $where = " contact.external_identifier IS NOT NULL AND contribution.contribution_status_id = $completed and fintype.is_deductible = 1";
         //0 - offline
         //1 - online
         if ($method != null) {
@@ -88,18 +96,22 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
         if ($transaction_range_start_date != null) {
             $where .= " AND contribution.receive_date >= '$transaction_range_start_date'";
         }
+
         if ($transaction_range_end_date != null) {
             $where .= " AND contribution.receive_date <= '$transaction_range_end_date'";
         }
 
         if ($sent_range_start_date != null) {
-            $where .= " AND FROM_UNIXTIME(donation.created_date) >= '$sent_range_start_date' ";
+            $where .= " AND donation.created_date >= '$sent_range_start_date' ";
         }
 
         if ($sent_range_end_date != null) {
-            $where .= " AND FROM_UNIXTIME(donation.created_date) <= '$sent_range_end_date'";
+            $where .= " AND donation.created_date <= '$sent_range_end_date'";
         }
 
+        if ($min_amount != null) {
+            $where .= " AND contribution.total_amount >= $min_amount";
+        }
 
         $sql = "SELECT contribution.id,
        CONCAT('$prefix', LPAD(RIGHT(contribution.id, 7), 7, 0)) receipt_no,
@@ -108,7 +120,7 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
        contact.id contact_id,
        contact.sort_name,
        contact.external_identifier nricuen,
-       FROM_UNIXTIME(donation.created_date),
+       donation.created_date,
        IF(
                response_log.is_api IS NULL,
                NULL,
@@ -122,7 +134,7 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
        response_log.response_body,
        contact.external_identifier,
        contribution.receive_date
-FROM civicrm_contribution contribution
+       FROM civicrm_contribution contribution
          INNER JOIN civicrm_contact contact ON contact.id = contribution.contact_id
          INNER JOIN civicrm_financial_type fintype ON fintype.id = contribution.financial_type_id
          LEFT JOIN civicrm_o8_iras_donation donation ON contribution.id = donation.contribution_id
@@ -155,6 +167,12 @@ FROM civicrm_contribution contribution
         while ($result->fetch()) {
             $sentMessage = '';
             $servResp = json_decode($result->response_body);
+            if (isset($servResp->data)) {
+                if (isset($servResp->data->acknowledgementCode)) {
+                    $sentMessage .= "Success code > " . $servResp->data->acknowledgementCode . "\n";
+
+                }
+            }
             $sentMessage .= $servResp->info->message;
             if ($servResp->info->fieldInfoList != null)
                 $sentMessage .= ' > ' . json_encode($servResp->info->fieldInfoList);

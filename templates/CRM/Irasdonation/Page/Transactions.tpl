@@ -17,8 +17,8 @@
         <div class="crm-results-block">
             <div class="crm-search-results">
 {*                {include file="CRM/common/enableDisableApi.tpl"}*}
-{*                {include file="CRM/common/jsortable.tpl"}            *}
-                <table class="selector transactions row-highlight pagerDisplay">
+{*                {include file="CRM/common/jsortable.tpl"}*}
+                <table class="selector selector-transactions row-highlight pagerDisplay">
                     <thead class="sticky">
                     <tr>
                         <th id="sortable" scope="col">
@@ -35,6 +35,9 @@
                         </th>
                         <th id="sortable" scope="col">
                             {ts}Contact Name{/ts}
+                        </th>
+                        <th id="sortable" scope="col">
+                            {ts}Contact NRIC/UEN{/ts}
                         </th>
                         <th id="sortable" scope="col">
                             {ts}Sent Date{/ts}

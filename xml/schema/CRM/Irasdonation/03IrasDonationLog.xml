@@ -59,7 +59,7 @@
   </field>
 
   <field>
-    <name>name</name>
+    <name>contact_name</name>
     <type>varchar</type>
     <length>80</length>
     <required>false</required>

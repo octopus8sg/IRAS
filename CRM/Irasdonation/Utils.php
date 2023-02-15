@@ -125,7 +125,7 @@ class CRM_Irasdonation_Utils
         self::writeLog($code, 'code');
         self::writeLog($state, 'state');
         $selfstate = $session->get(self::STATE);
-        if($selfstate != $state){
+        if ($selfstate != $state) {
             print_r(['code' => $code, 'state' => $state]);
             return print_r(['code' => $code, 'state' => $state], true);
         }
@@ -604,44 +604,57 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
     }
 
     /**
-     * @param string $reportYear
-     * @param $counter
-     * @param $total
+     * @param string $basis_year
+     * @param $num_of_records
+     * @param $total_donation_amount
      * @param $details
      * @return array
      */
 
-    public static function prepareBody(string $reportYear, $counter, $total, $details): array
+    public static function prepareBody(string $basis_year, $num_of_records, $total_donation_amount, $details): array
     {
         $settings = CRM_Irasdonation_Utils::getSettings();
-        $organisation_id = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_ID['slug'], $settings);
-        $organization_type = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANIZATION_TYPE['slug'], $settings);
+        $organisation_id_no = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_ID['slug'], $settings);
+        $organisation_id_type = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANIZATION_TYPE['slug'], $settings);
         $organisation_name = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_NAME['slug'], $settings);
         $authorised_person_id = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_ID['slug'], $settings);
         $authorised_person_name = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_NAME['slug'], $settings);
         $authorised_person_designation = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_DESIGNATION['slug'], $settings);
-        $authorised_person_phone = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_PHONE['slug'], $settings);
+        $telephone = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_PHONE['slug'], $settings);
         $authorised_person_email = CRM_Utils_Array::value(CRM_Irasdonation_Utils::AUTHORISED_PERSON_EMAIL['slug'], $settings);
-        $validateOnly = self::getValidateOnly();
+        $validate_only = self::getValidateOnly();
+        $batch_indicator = "O";
         $body = array(
             'orgAndSubmissionInfo' => [
-                'validateOnly' => $validateOnly,
-                'basisYear' => $reportYear,
-                'organisationIDType' => $organization_type,
-                'organisationIDNo' => $organisation_id,
+                'validateOnly' => $validate_only,
+                'basisYear' => $basis_year,
+                'organisationIDType' => $organisation_id_type,
+                'organisationIDNo' => $organisation_id_no,
                 'organisationName' => $organisation_name,
-                'batchIndicator' => 'O',
+                'batchIndicator' => $batch_indicator,
                 'authorisedPersonIDNo' => $authorised_person_id,
                 'authorisedPersonName' => $authorised_person_name,
                 'authorisedPersonDesignation' => $authorised_person_designation,
-                'telephone' => $authorised_person_phone,
+                'telephone' => $telephone,
                 'authorisedPersonEmail' => $authorised_person_email,
-                'numOfRecords' => $counter,
-                'totalDonationAmount' => $total
+                'numOfRecords' => $num_of_records,
+                'totalDonationAmount' => $total_donation_amount
             ],
             "donationDonorDtl" => $details
         );
-        return $body;
+        return array($body,
+            $validate_only,
+            $basis_year,
+            $organisation_id_type,
+            $organisation_id_no,
+            $organisation_name,
+            $batch_indicator,
+            $authorised_person_name,
+            $authorised_person_designation,
+            $telephone,
+            $authorised_person_email,
+            $num_of_records,
+            $total_donation_amount);
     }
 
     /**
@@ -671,6 +684,15 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
     }
 
     /**
+     * @param $name
+     * @return int|string|null
+     */
+    public static function getContributionStatusID($name)
+    {
+        return CRM_Utils_Array::key($name, \CRM_Contribute_PseudoConstant::contributionStatus(NULL, 'name'));
+    }
+
+    /**
      * @param $startDate
      * @param $endDate
      * @param $includePrevious
@@ -679,43 +701,44 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
     public static function prepareOnlineReportDetails($startDate, $endDate, $includePrevious)
     {
         $settings = self::getSettings();
-        $min_amount= CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
+        $min_amount = CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
         $prefix = CRM_Utils_Array::value(CRM_Irasdonation_Utils::PREFIX['slug'], $settings);
 
-        $where = "UPPER(cdnlog.receipt_status)='ISSUED'";
+        $completed = self::getContributionStatusID('Completed');
+        $where = " contact.external_identifier IS NOT NULL AND contribution.contribution_status_id = $completed ";
 
         if ($includePrevious == 0) {
-            $where .= " AND cdnlog.id NOT IN 
-        (SELECT iras_donation.cdntaxreceipts_log_id FROM civicrm_o8_iras_donation iras_donation 
-        WHERE iras_donation.created_date IS NOT NULL) ";
+            $where .= " AND donation.id NOT IN (select donation_log.iras_donation_id from civicrm_o8_iras_donation_log donation_log)";
         }
-        if ($startDate != null ) {
-            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$startDate'";
+
+        if ($startDate != null) {
+            $where .= " AND contribution.receive_date >= '$startDate'";
         }
-        if ($endDate != null) {
-            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) <= '$endDate'";
+
+        if ($startDate != null) {
+            $endDate .= " AND contribution.receive_date <= '$startDate'";
         }
+
         if ($min_amount != null) {
-            $where .= " AND cdnlog.receipt_amount >= $min_amount";
+            $where .= " AND contribution.total_amount >= $min_amount";
         }
 
         //generate header of report
         $sql = "SELECT
-    cdnlog.id cdnlog_id, 
-    contact.sort_name contact_sort_name, 
+    contribution.id contribution_id, 
+    contact.sort_name contact_name, 
     contact.external_identifier contact_external_identifier,
     address.supplemental_address_1 address_supplemental_address_1,
     address.supplemental_address_2  address_supplemental_address_2,
     address.postal_code  address_postal_code,
-    CONCAT('$prefix', LPAD(RIGHT(cdnlogcontrib.contribution_id, 7), 7, 0)) cdnlog_receipt_no,
-    FROM_UNIXTIME(cdnlog.issued_on) cdnlog_issued_on,
-    cdnlog.receipt_amount cdnlog_receipt_amount
-    FROM cdntaxreceipts_log cdnlog 
-    INNER JOIN cdntaxreceipts_log_contributions cdnlogcontrib ON cdnlogcontrib.receipt_id = cdnlog.id
-    INNER JOIN civicrm_contribution contrib ON contrib.id = cdnlogcontrib.contribution_id  
-    INNER JOIN civicrm_contact contact ON contact.id = cdnlog.contact_id 
-    INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id   
-    LEFT JOIN civicrm_address address ON address.id = contact.addressee_id
+    CONCAT('$prefix', LPAD(RIGHT(contribution.id, 7), 7, 0)) receipt_no,
+    contribution.receive_date date_of_donation,
+    contribution.total_amount donation_amount
+    FROM civicrm_contribution contribution 
+         INNER JOIN civicrm_financial_type fintype ON fintype.id = contribution.financial_type_id and fintype.is_deductible = 1 
+         INNER JOIN civicrm_contact contact ON contact.id = contribution.contact_id
+         LEFT JOIN civicrm_address address ON address.contact_id = contact.id and address.is_primary = 1
+         LEFT JOIN civicrm_o8_iras_donation donation ON contribution.id = donation.contribution_id        
     WHERE $where
     LIMIT 5000";
         self::writeLog($sql, "sql");
@@ -728,38 +751,53 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         $generatedDate = date('Y-m-d H:i:s');
 
         $dataBody = array();
-        $reportedIDs = array();
         //generate body of th report
         $details = array();
+        $donations = array();
         while ($result->fetch()) {
 
             $idType = self::parsUENNumber($result->contact_external_identifier);
-            self::writeLog($idType);
             if ($idType > 0) {
                 $dataBody = array(
                     'recordID' => $counter + 1,
                     'idType' => $idType,
                     'idNumber' => $result->contact_external_identifier,
                     'individualIndicator' => '',
-                    'name' => $result->contact_sort_name,
+                    'name' => $result->contact_name,
                     'addressLine1' => $result->address_supplemental_address_1,
                     'addressLine2' => $result->address_supplemental_address_2,
-                    'postalCode' => '',
-                    'donationAmount' => round($result->cdnlog_receipt_amount),
-                    'dateOfDonation' => date("Ymd", strtotime($result->cdnlog_issued_on)),
-                    'receiptNum' => $result->cdnlog_receipt_no,
+                    'postalCode' => $result->address_postal_code,
+                    'donationAmount' => round($result->donation_amount),
+                    'dateOfDonation' => date("Ymd", strtotime($result->date_of_donation)),
+                    'receiptNum' => $result->receipt_no,
                     'typeOfDonation' => 'O',
                     'namingDonation' => 'Z'
                 );
 
-                array_push($reportedIDs, $result->cdnlog_id);
+                $donation = array(
+                    'contribution_id' => $result->contribution_id,
+                    'record_id' => $counter,
+                    'id_type' => $idType,
+                    'id_number' => $result->contact_external_identifier,
+                    'individual_indicator' => '',
+                    'contact_name' => $result->contact_name,
+                    'address_line1' => $result->address_supplemental_address_1,
+                    'address_line2' => $result->address_supplemental_address_2,
+                    'postal_code' => $result->address_postal_code,
+                    'donation_amount' => round($result->donation_amount),
+                    'date_of_donation' => date("Ymd", strtotime($result->date_of_donation)),
+                    'receipt_num' => $result->receipt_no,
+                    'type_of_donation' => 'O',
+                    'naming_donation' => 'Z'
+                );
 
                 array_push($details, $dataBody);
-                $total += $result->cdnlog_receipt_amount;
+                array_push($donations, $donation);
+                $total += $result->donation_amount;
                 $counter++;
             }
         }
-        return array($totalRows, $total, $counter, $generatedDate, $reportedIDs, $details);
+        return array($totalRows, $total, $counter, $generatedDate, $details, $donations);
     }
 
     /**
@@ -785,7 +823,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
             CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
             throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
         } catch (Exception $e) {
-            self::writeLog($e->getMessage(), 'Error: Another error: ' );
+            self::writeLog($e->getMessage(), 'Error: Another error: ');
             CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
             throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
         }
@@ -826,7 +864,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
             CRM_Core_Error::statusBounce('Error: Request error ', null, $e->getMessage());
             throw new CRM_Core_Exception('Error: Request error: ' . $e->getMessage());
         } catch (Exception $e) {
-            self::writeLog($e->getMessage(), 'Error: Another error: ' );
+            self::writeLog($e->getMessage(), 'Error: Another error: ');
             CRM_Core_Error::statusBounce('Error: Another error: ', null, $e->getMessage());
             throw new CRM_Core_Exception('Error: Another error: ' . $e->getMessage());
         }
@@ -895,7 +933,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         (SELECT iras_donation.cdntaxreceipts_log_id FROM civicrm_o8_iras_donation iras_donation 
         WHERE iras_donation.created_date IS NOT NULL) ";
         }
-        if ($startDate != null ) {
+        if ($startDate != null) {
             $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$startDate'";
         }
         if ($endDate != null) {

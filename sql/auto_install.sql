@@ -68,12 +68,14 @@ ENGINE=InnoDB;
 -- *******************************************************/
 CREATE TABLE `civicrm_o8_iras_donation` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ID',
-  `contribution_id` int unsigned COMMENT 'FK to Contribution',
+  `contribution_id` int unsigned NULL COMMENT 'FK to Contribution',
   `last_donation_log_id` int unsigned NULL COMMENT 'Last Iras Donation Log',
   `created_date` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT 'When the response was first received',
   PRIMARY KEY (`id`),
+  UNIQUE INDEX `index_contribution_id`(contribution_id),
+  UNIQUE INDEX `index_last_donation_log_id`(last_donation_log_id),
   INDEX `index_created_date`(created_date),
-  CONSTRAINT FK_civicrm_o8_iras_donation_contribution_id FOREIGN KEY (`contribution_id`) REFERENCES `civicrm_contribution`(`id`) ON DELETE SET NULL
+  CONSTRAINT FK_civicrm_o8_iras_donation_contribution_id FOREIGN KEY (`contribution_id`) REFERENCES `civicrm_contribution`(`id`) ON DELETE CASCADE
 )
 ENGINE=InnoDB;
 
@@ -90,7 +92,7 @@ CREATE TABLE `civicrm_o8_iras_donation_log` (
   `id_type` varchar(4) NULL DEFAULT "5" COMMENT 'idType',
   `id_number` varchar(12) NULL DEFAULT "" COMMENT 'idNumber',
   `individual_indicator` varchar(3) NULL DEFAULT "" COMMENT 'individualIndicator',
-  `name` varchar(80) NULL DEFAULT "" COMMENT 'name',
+  `contact_name` varchar(80) NULL DEFAULT "" COMMENT 'name',
   `address_line1` varchar(160) NULL DEFAULT NULL COMMENT 'addressLine1',
   `address_line2` varchar(160) NULL DEFAULT NULL COMMENT 'addressLine2',
   `postal_code` varchar(60) NULL DEFAULT NULL COMMENT 'postalCode',
