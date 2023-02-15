@@ -50,14 +50,28 @@ ENGINE=InnoDB;
 -- *
 -- * civicrm_o8_iras_response_log
 -- *
--- * iras log response logs
+-- * IRAS submissions response logs, keeps all submission values and responses
 -- *
 -- *******************************************************/
 CREATE TABLE `civicrm_o8_iras_response_log` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ID',
-  `response_body` text NOT NULL COMMENT 'json response of request',
-  `response_code` int NULL COMMENT 'response code',
-  `created_date` datetime COMMENT 'Created date',
-  PRIMARY KEY (`id`)
+  `validate_only` tinyint NULL DEFAULT true COMMENT 'validateOnly',
+  `basis_year` varchar(4) NULL DEFAULT "" COMMENT 'BasisYear',
+  `organisation_id_type` varchar(60) NULL DEFAULT "" COMMENT 'organisationIDType',
+  `organisation_id_no` varchar(60) NULL DEFAULT "" COMMENT 'organisationIDNo',
+  `organisation_name` varchar(60) NULL DEFAULT "" COMMENT 'organisationName',
+  `batch_indicator` varchar(4) NULL DEFAULT "0" COMMENT 'batchIndicator',
+  `authorised_person_id_no` varchar(60) NULL DEFAULT "" COMMENT 'authorisedPersonIDNo',
+  `authorised_person_name` varchar(60) NULL DEFAULT "" COMMENT 'authorisedPersonName',
+  `authorised_person_designation` varchar(60) NULL DEFAULT "" COMMENT 'authorisedPersonDesignation',
+  `telephone` varchar(60) NULL DEFAULT "" COMMENT 'telephone',
+  `authorised_person_email` varchar(60) NULL DEFAULT "" COMMENT 'authorisedPersonEmail',
+  `num_of_records` int unsigned NULL DEFAULT 0 COMMENT 'numOfRecords',
+  `total_donation_amount` int unsigned NULL DEFAULT 0 COMMENT 'totalDonationAmount',
+  `response_body` text NOT NULL DEFAULT "" COMMENT 'json response of request',
+  `response_code` int NULL DEFAULT NULL COMMENT 'response code',
+  `created_date` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT 'When the response was first received',
+  PRIMARY KEY (`id`),
+  INDEX `index_created_date`(created_date)
 )
 ENGINE=InnoDB;

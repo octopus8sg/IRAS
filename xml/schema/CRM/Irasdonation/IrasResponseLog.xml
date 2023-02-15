@@ -28,7 +28,8 @@
 
   <field>
     <name>basis_year</name>
-    <type>text</type>
+    <type>varchar</type>
+    <length>4</length>
     <required>false</required>
     <default>""</default>
     <comment>BasisYear</comment>
@@ -36,7 +37,8 @@
 
   <field>
     <name>organisation_id_type</name>
-    <type>text</type>
+    <type>varchar</type>
+    <length>60</length>
     <required>false</required>
     <default>""</default>
     <comment>organisationIDType</comment>
@@ -44,26 +46,90 @@
 
   <field>
     <name>organisation_id_no</name>
-    <type>text</type>
+    <type>varchar</type>
+    <length>60</length>
     <required>false</required>
     <default>""</default>
     <comment>organisationIDNo</comment>
   </field>
 
   <field>
-    <name>organisation_id_no</name>
-    <type>text</type>
+    <name>organisation_name</name>
+    <type>varchar</type>
+    <length>60</length>
     <required>false</required>
     <default>""</default>
-    <comment>organisationIDNo</comment>
+    <comment>organisationName</comment>
   </field>
 
   <field>
-    <name>response_body</name>
-    <type>text</type>
-    <required>true</required>
+    <name>batch_indicator</name>
+    <type>varchar</type>
+    <length>4</length>
+    <required>false</required>
+    <default>"0"</default>
+    <comment>batchIndicator</comment>
+  </field>
+
+  <field>
+    <name>authorised_person_id_no</name>
+    <type>varchar</type>
+    <length>60</length>
+    <required>false</required>
     <default>""</default>
-    <comment>json response of request</comment>
+    <comment>authorisedPersonIDNo</comment>
+  </field>
+
+  <field>
+    <name>authorised_person_name</name>
+    <type>varchar</type>
+    <length>60</length>
+    <required>false</required>
+    <default>""</default>
+    <comment>authorisedPersonName</comment>
+  </field>
+
+  <field>
+    <name>authorised_person_designation</name>
+    <type>varchar</type>
+    <length>60</length>
+    <required>false</required>
+    <default>""</default>
+    <comment>authorisedPersonDesignation</comment>
+  </field>
+
+  <field>
+    <name>telephone</name>
+    <type>varchar</type>
+    <length>60</length>
+    <required>false</required>
+    <default>""</default>
+    <comment>telephone</comment>
+  </field>
+
+  <field>
+    <name>authorised_person_email</name>
+    <type>varchar</type>
+    <length>60</length>
+    <required>false</required>
+    <default>""</default>
+    <comment>authorisedPersonEmail</comment>
+  </field>
+
+  <field>
+    <name>num_of_records</name>
+    <type>int unsigned</type>
+    <required>false</required>
+    <default>0</default>
+    <comment>numOfRecords</comment>
+  </field>
+
+  <field>
+    <name>total_donation_amount</name>
+    <type>int unsigned</type>
+    <required>false</required>
+    <default>0</default>
+    <comment>totalDonationAmount</comment>
   </field>
 
   <field>
