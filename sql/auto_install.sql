@@ -17,8 +17,9 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
-DROP TABLE IF EXISTS `civicrm_o8_iras_response_log`;
+DROP TABLE IF EXISTS `civicrm_o8_iras_donation_log`;
 DROP TABLE IF EXISTS `civicrm_o8_iras_donation`;
+DROP TABLE IF EXISTS `civicrm_o8_iras_response_log`;
 
 SET FOREIGN_KEY_CHECKS=1;
 -- /*******************************************************
@@ -29,25 +30,6 @@ SET FOREIGN_KEY_CHECKS=1;
 
 -- /*******************************************************
 -- *
--- * civicrm_o8_iras_donation
--- *
--- * IRAS Donation Reporting tool
--- *
--- *******************************************************/
-CREATE TABLE `civicrm_o8_iras_donation` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ID',
-  `cdntaxreceipts_log_id` int COMMENT 'FK to Contact',
-  `is_api` tinyint COMMENT 'api or offline report',
-  `comment` text NULL COMMENT 'comment to sending item',
-  `log_id` int unsigned NULL COMMENT 'FK to Contact Response log',
-  `created_date` datetime COMMENT 'Created date',
-  PRIMARY KEY (`id`),
-  CONSTRAINT FK_civicrm_o8_iras_donation_cdntaxreceipts_log_id FOREIGN KEY (`cdntaxreceipts_log_id`) REFERENCES `cdntaxreceipts_log`(`id`) ON DELETE CASCADE
-)
-ENGINE=InnoDB;
-
--- /*******************************************************
--- *
 -- * civicrm_o8_iras_response_log
 -- *
 -- * IRAS submissions response logs, keeps all submission values and responses
@@ -55,6 +37,7 @@ ENGINE=InnoDB;
 -- *******************************************************/
 CREATE TABLE `civicrm_o8_iras_response_log` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ID',
+  `is_api` tinyint NULL DEFAULT false COMMENT 'api or offline report',
   `validate_only` tinyint NULL DEFAULT true COMMENT 'validateOnly',
   `basis_year` varchar(4) NULL DEFAULT "" COMMENT 'BasisYear',
   `organisation_id_type` varchar(60) NULL DEFAULT "" COMMENT 'organisationIDType',
@@ -68,10 +51,58 @@ CREATE TABLE `civicrm_o8_iras_response_log` (
   `authorised_person_email` varchar(60) NULL DEFAULT "" COMMENT 'authorisedPersonEmail',
   `num_of_records` int unsigned NULL DEFAULT 0 COMMENT 'numOfRecords',
   `total_donation_amount` int unsigned NULL DEFAULT 0 COMMENT 'totalDonationAmount',
-  `response_body` text NOT NULL DEFAULT "" COMMENT 'json response of request',
+  `response_body` text NULL COMMENT 'json response of request',
   `response_code` int NULL DEFAULT NULL COMMENT 'response code',
   `created_date` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT 'When the response was first received',
   PRIMARY KEY (`id`),
   INDEX `index_created_date`(created_date)
+)
+ENGINE=InnoDB;
+
+-- /*******************************************************
+-- *
+-- * civicrm_o8_iras_donation
+-- *
+-- * IRAS Donation Reporting tool
+-- *
+-- *******************************************************/
+CREATE TABLE `civicrm_o8_iras_donation` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ID',
+  `contribution_id` int unsigned COMMENT 'FK to Contribution',
+  `last_donation_log_id` int unsigned NULL COMMENT 'Last Iras Donation Log',
+  `created_date` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT 'When the response was first received',
+  PRIMARY KEY (`id`),
+  INDEX `index_created_date`(created_date),
+  CONSTRAINT FK_civicrm_o8_iras_donation_contribution_id FOREIGN KEY (`contribution_id`) REFERENCES `civicrm_contribution`(`id`) ON DELETE SET NULL
+)
+ENGINE=InnoDB;
+
+-- /*******************************************************
+-- *
+-- * civicrm_o8_iras_donation_log
+-- *
+-- * IRAS Donation Log
+-- *
+-- *******************************************************/
+CREATE TABLE `civicrm_o8_iras_donation_log` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique IrasDonationLog ID',
+  `record_id` int unsigned NULL DEFAULT 1 COMMENT 'recordID',
+  `id_type` varchar(4) NULL DEFAULT "5" COMMENT 'idType',
+  `id_number` varchar(12) NULL DEFAULT "" COMMENT 'idNumber',
+  `individual_indicator` varchar(3) NULL DEFAULT "" COMMENT 'individualIndicator',
+  `name` varchar(80) NULL DEFAULT "" COMMENT 'name',
+  `address_line1` varchar(160) NULL DEFAULT NULL COMMENT 'addressLine1',
+  `address_line2` varchar(160) NULL DEFAULT NULL COMMENT 'addressLine2',
+  `postal_code` varchar(60) NULL DEFAULT NULL COMMENT 'postalCode',
+  `donation_amount` int unsigned NULL DEFAULT 0 COMMENT 'totalDonationAmount',
+  `date_of_donation` varchar(8) NULL DEFAULT NULL COMMENT 'dateOfDonation',
+  `receipt_num` varchar(10) NULL DEFAULT NULL COMMENT 'receiptNum',
+  `type_of_donation` varchar(1) NULL DEFAULT "O" COMMENT 'typeOfDonation',
+  `naming_donation` varchar(1) NULL DEFAULT "Z" COMMENT 'namingDonation',
+  `iras_response_id` int unsigned COMMENT 'FK to IRAS Responses',
+  `iras_donation_id` int unsigned COMMENT 'FK to IRAS Donations',
+  PRIMARY KEY (`id`),
+  CONSTRAINT FK_civicrm_o8_iras_donation_log_iras_response_id FOREIGN KEY (`iras_response_id`) REFERENCES `civicrm_o8_iras_response_log`(`id`) ON DELETE SET NULL,
+  CONSTRAINT FK_civicrm_o8_iras_donation_log_iras_donation_id FOREIGN KEY (`iras_donation_id`) REFERENCES `civicrm_o8_iras_donation`(`id`) ON DELETE SET NULL
 )
 ENGINE=InnoDB;

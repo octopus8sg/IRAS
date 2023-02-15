@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<table>
+  <base>CRM/Irasdonation</base>
+  <class>IrasDonationLog</class>
+  <name>civicrm_o8_iras_donation_log</name>
+  <comment>IRAS Donation Log</comment>
+  <log>true</log>
+
+  <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique IrasDonationLog ID</comment>
+    <html>
+      <type>Number</type>
+    </html>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+
+<!-- last sent donation values -->
+
+  <field>
+    <name>record_id</name>
+    <type>int unsigned</type>
+    <required>false</required>
+    <default>1</default>
+    <comment>recordID</comment>
+  </field>
+
+  <field>
+    <name>id_type</name>
+    <type>varchar</type>
+    <required>false</required>
+    <length>4</length>
+    <default>"5"</default>
+    <comment>idType</comment>
+  </field>
+
+  <field>
+    <name>id_number</name>
+    <type>varchar</type>
+    <length>12</length>
+    <required>false</required>
+    <default>""</default>
+    <comment>idNumber</comment>
+  </field>
+
+  <field>
+    <name>individual_indicator</name>
+    <type>varchar</type>
+    <length>3</length>
+    <required>false</required>
+    <default>""</default>
+    <comment>individualIndicator</comment>
+  </field>
+
+  <field>
+    <name>name</name>
+    <type>varchar</type>
+    <length>80</length>
+    <required>false</required>
+    <default>""</default>
+    <comment>name</comment>
+  </field>
+
+  <field>
+    <name>address_line1</name>
+    <type>varchar</type>
+    <length>160</length>
+    <required>false</required>
+    <default>NULL</default>
+    <comment>addressLine1</comment>
+  </field>
+
+  <field>
+    <name>address_line2</name>
+    <type>varchar</type>
+    <length>160</length>
+    <required>false</required>
+    <default>NULL</default>
+    <comment>addressLine2</comment>
+  </field>
+
+  <field>
+    <name>postal_code</name>
+    <type>varchar</type>
+    <length>60</length>
+    <required>false</required>
+    <default>NULL</default>
+    <comment>postalCode</comment>
+  </field>
+
+  <field>
+    <name>donation_amount</name>
+    <type>int unsigned</type>
+    <required>false</required>
+    <default>0</default>
+    <comment>totalDonationAmount</comment>
+  </field>
+
+  <field>
+    <name>date_of_donation</name>
+    <type>varchar</type>
+    <length>8</length>
+    <required>false</required>
+    <default>NULL</default>
+    <comment>dateOfDonation</comment>
+  </field>
+
+  <field>
+    <name>receipt_num</name>
+    <type>varchar</type>
+    <length>10</length>
+    <required>false</required>
+    <default>NULL</default>
+    <comment>receiptNum</comment>
+  </field>
+
+  <field>
+    <name>type_of_donation</name>
+    <type>varchar</type>
+    <length>1</length>
+    <required>false</required>
+    <default>"O"</default>
+    <comment>typeOfDonation</comment>
+  </field>
+
+  <field>
+    <name>naming_donation</name>
+    <type>varchar</type>
+    <length>1</length>
+    <required>false</required>
+    <default>"Z"</default>
+    <comment>namingDonation</comment>
+  </field>
+
+
+
+  <!--  "recordID": 1,-->
+<!--  "idType": 6,-->
+<!--  "idNumber": "180011032C",-->
+<!--  "individualIndicator": "",-->
+<!--  "name": "dol, hin",-->
+<!--  "addressLine1": null,-->
+<!--  "addressLine2": null,-->
+<!--  "postalCode": "",-->
+<!--  "donationAmount": 9,-->
+<!--  "dateOfDonation": "20230212",-->
+<!--  "receiptNum": "T-00000222",-->
+<!--  "typeOfDonation": "O",-->
+<!--  "namingDonation": "Z"-->
+
+
+<!-- foreign keys - many to many -->
+  <field>
+    <name>iras_response_id</name>
+    <type>int unsigned</type>
+    <comment>FK to IRAS Responses</comment>
+  </field>
+  <foreignKey>
+    <name>iras_response_id</name>
+    <table>civicrm_o8_iras_response_log</table>
+    <key>id</key>
+    <onDelete>SET NULL</onDelete>
+  </foreignKey>
+
+  <field>
+    <name>iras_donation_id</name>
+    <type>int unsigned</type>
+    <comment>FK to IRAS Donations</comment>
+  </field>
+  <foreignKey>
+    <name>iras_donation_id</name>
+    <table>civicrm_o8_iras_donation</table>
+    <key>id</key>
+    <onDelete>SET NULL</onDelete>
+  </foreignKey>
+
+</table>

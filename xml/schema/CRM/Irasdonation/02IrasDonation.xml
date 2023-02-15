@@ -19,47 +19,36 @@
   </primaryKey>
 
   <field>
-    <name>cdntaxreceipts_log_id</name>
-    <type>int</type>
+    <name>contribution_id</name>
+    <type>int unsigned</type>
     <unique>TRUE</unique>
-    <comment>FK to Contact</comment>
+    <comment>FK to Contribution</comment>
   </field>
-
   <foreignKey>
-    <name>cdntaxreceipts_log_id</name>
-    <table>cdntaxreceipts_log</table>
+    <name>contribution_id</name>
+    <table>civicrm_contribution</table>
     <key>id</key>
-    <onDelete>CASCADE</onDelete>
+    <onDelete>SET NULL</onDelete>
   </foreignKey>
 
   <field>
-    <name>is_api</name>
-    <type>boolean</type>
-    <comment>api or offline report</comment>
-  </field>  
-
-  <field>
-    <name>comment</name>
-    <type>text</type>
-    <required>false</required>
-    <comment>comment to sending item</comment>
-    <html>
-      <type>Comment</type>
-    </html>
-  </field>
-
-  <field>
-    <name>log_id</name>
+    <name>last_donation_log_id</name>
     <type>int unsigned</type>
     <required>false</required>
     <unique>false</unique>
-    <comment>FK to Contact Response log</comment>
+    <comment>Last Iras Donation Log</comment>
   </field>
 
   <field>
     <name>created_date</name>
-    <type>datetime</type>
-    <comment>Created date</comment>
+    <title>Created Date</title>
+    <type>timestamp</type>
+    <default>CURRENT_TIMESTAMP</default>
+    <comment>When the response was first received</comment>
   </field>
+  <index>
+    <name>index_created_date</name>
+    <fieldName>created_date</fieldName>
+  </index>
 
 </table>

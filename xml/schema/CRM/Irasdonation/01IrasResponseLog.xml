@@ -19,6 +19,14 @@
   </primaryKey>
 
   <field>
+    <name>is_api</name>
+    <type>boolean</type>
+    <required>false</required>
+    <default>false</default>
+    <comment>api or offline report</comment>
+  </field>
+
+  <field>
     <name>validate_only</name>
     <type>boolean</type>
     <required>false</required>
@@ -135,8 +143,7 @@
   <field>
     <name>response_body</name>
     <type>text</type>
-    <required>true</required>
-    <default>""</default>
+    <required>false</required>
     <comment>json response of request</comment>
     <html>
       <type>TextArea</type>

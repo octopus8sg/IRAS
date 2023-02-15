@@ -310,10 +310,15 @@ function _irasdonation_civix_civicrm_entityTypes(&$entityTypes) {
       'class' => 'CRM_Irasdonation_DAO_IrasDonation',
       'table' => 'civicrm_o8_iras_donation',
     ],
+    'CRM_Irasdonation_DAO_IrasDonationLog' => [
+      'name' => 'IrasDonationLog',
+      'class' => 'CRM_Irasdonation_DAO_IrasDonationLog',
+      'table' => 'civicrm_o8_iras_donation_log',
+    ],
     'CRM_Irasdonation_DAO_IrasResponseLog' => [
       'name' => 'IrasResponseLog',
       'class' => 'CRM_Irasdonation_DAO_IrasResponseLog',
-      'table' => 'civicrm_iras_response_log',
+      'table' => 'civicrm_o8_iras_response_log',
     ],
   ]);
 }
