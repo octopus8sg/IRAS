@@ -66,8 +66,8 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
     $sortOrder = isset($_REQUEST['sSortDir_0']) ? CRM_Utils_Type::escape($_REQUEST['sSortDir_0'], 'String') : 'asc';
     $offset = CRM_Utils_Request::retrieveValue('iDisplayStart', 'Positive', 0);
     $limit = CRM_Utils_Request::retrieveValue('iDisplayLength', 'Positive', 10);
-
-    $where = " UPPER(cdnlog.receipt_status)='ISSUED' ";
+    //Select contacts with external ID
+    $where = " contact.external_identifier IS NOT NULL ";
 
     //0 - offline
     //1 - online
@@ -109,8 +109,8 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
             CONCAT('$prefix', LPAD(RIGHT(cdnlogcontrib.contribution_id, 7), 7, 0)) receipt_no,
             FROM_UNIXTIME(cdnlog.issued_on) issued_on,
             cdnlog.receipt_amount,
-            cont.id contact_id,
-            cont.sort_name,
+            contact.id contact_id,
+            contact.sort_name,
             donation.created_date,
             IF(
                 donation.is_api IS NULL,
@@ -123,12 +123,12 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
                 IF(ilog.response_code = 10, 'Success', 'Fail')
             ) sent_response,
             ilog.response_body,
-            cont.external_identifier,
+            contact.external_identifier,
             contrib.receive_date
             FROM cdntaxreceipts_log cdnlog 
             INNER JOIN cdntaxreceipts_log_contributions cdnlogcontrib ON cdnlogcontrib.receipt_id = cdnlog.id
             INNER JOIN civicrm_contribution contrib ON contrib.id = cdnlogcontrib.contribution_id
-            INNER JOIN civicrm_contact cont ON cont.id = contrib.contact_id
+            INNER JOIN civicrm_contact contact ON contact.id = contrib.contact_id
             INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id
             LEFT JOIN (
               SELECT id,

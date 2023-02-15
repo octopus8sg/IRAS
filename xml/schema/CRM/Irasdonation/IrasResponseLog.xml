@@ -4,7 +4,7 @@
   <base>CRM/Irasdonation</base>
   <class>IrasResponseLog</class>
   <name>civicrm_o8_iras_response_log</name>
-  <comment>iras log response logs</comment>
+  <comment>IRAS submissions response logs, keeps all submission values and responses</comment>
   <log>true</log>
 
   <field>
@@ -19,12 +19,61 @@
   </primaryKey>
 
   <field>
+    <name>validate_only</name>
+    <type>boolean</type>
+    <required>false</required>
+    <default>true</default>
+    <comment>validateOnly</comment>
+  </field>
+
+  <field>
+    <name>basis_year</name>
+    <type>text</type>
+    <required>false</required>
+    <default>""</default>
+    <comment>BasisYear</comment>
+  </field>
+
+  <field>
+    <name>organisation_id_type</name>
+    <type>text</type>
+    <required>false</required>
+    <default>""</default>
+    <comment>organisationIDType</comment>
+  </field>
+
+  <field>
+    <name>organisation_id_no</name>
+    <type>text</type>
+    <required>false</required>
+    <default>""</default>
+    <comment>organisationIDNo</comment>
+  </field>
+
+  <field>
+    <name>organisation_id_no</name>
+    <type>text</type>
+    <required>false</required>
+    <default>""</default>
+    <comment>organisationIDNo</comment>
+  </field>
+
+  <field>
     <name>response_body</name>
     <type>text</type>
     <required>true</required>
+    <default>""</default>
+    <comment>json response of request</comment>
+  </field>
+
+  <field>
+    <name>response_body</name>
+    <type>text</type>
+    <required>true</required>
+    <default>""</default>
     <comment>json response of request</comment>
     <html>
-      <type>ResponseBody</type>
+      <type>TextArea</type>
     </html>
   </field>
 
@@ -32,19 +81,23 @@
     <name>response_code</name>
     <type>int</type>
     <required>false</required>
+    <default>NULL</default>
     <comment>response code</comment>
     <html>
-      <type>ResponseCode</type>
+      <type>Text</type>
     </html>
-  </field>  
+  </field>
 
   <field>
     <name>created_date</name>
-    <type>datetime</type>
-    <comment>Created date</comment>
-    <html>
-      <type>CreatedDate</type>
-    </html>
+    <title>Created Date</title>
+    <type>timestamp</type>
+    <default>CURRENT_TIMESTAMP</default>
+    <comment>When the response was first received</comment>
   </field>
+  <index>
+    <name>index_created_date</name>
+    <fieldName>created_date</fieldName>
+  </index>
 
 </table>

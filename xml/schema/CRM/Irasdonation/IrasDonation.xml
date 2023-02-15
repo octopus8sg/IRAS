@@ -24,6 +24,7 @@
     <unique>TRUE</unique>
     <comment>FK to Contact</comment>
   </field>
+
   <foreignKey>
     <name>cdntaxreceipts_log_id</name>
     <table>cdntaxreceipts_log</table>
