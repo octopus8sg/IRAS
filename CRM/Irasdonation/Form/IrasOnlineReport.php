@@ -101,9 +101,9 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         if ($startDate != null) {
             $reportYear = date("Y", strtotime($startDate));
         };
-        U::writeLog($startDate, "startDate");
-        U::writeLog($endDate, "endDate");
-        U::writeLog(strval($includePrevious), "includePrevious");
+//        U::writeLog($startDate, "startDate");
+//        U::writeLog($endDate, "endDate");
+//        U::writeLog(strval($includePrevious), "includePrevious");
         if (date("Y", strtotime($endDate)) != date("Y", strtotime($startDate))) {
             CRM_Core_Session::setStatus('Selected Date must be in the same year', ts('Date range incorrect'), 'warning', array('expires' => 5000));
             return;
@@ -111,7 +111,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
 
         //get donations
 
-        list($totalRows, $total, $counter, $generatedDate, $details, $donations) = U::prepareOnlineReportDetails($startDate, $endDate, $includePrevious);
+        list($totalRows, $total, $counter, $generatedDate, $donations, $online_donations, $offline_donations) = U::prepareDonations($startDate, $endDate, $includePrevious);
         if ($totalRows > 5000) {
             CRM_Core_Session::setStatus('You have more than 5000 records, please select smaller period of time', ts('Date range incorrect'), 'warning', array('expires' => 5000));
         }
@@ -125,9 +125,9 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             U::writeLog($iras_access_token, "iras_access_token");
         }
 
-        //prepare body
+        //prepare online_report_body
         $report_url = U::getIrasReportURL();
-        list($body,
+        list($online_report_body,
             $validate_only,
             $basis_year,
             $organisation_id_type,
@@ -139,10 +139,10 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             $telephone,
             $authorised_person_email,
             $num_of_records,
-            $total_donation_amount) = U::prepareBody($reportYear, $counter, $total, $details);
-        U::writeLog(json_encode($details), "prepared_details");
+            $total_donation_amount) = U::prepareOnlineReportBody($reportYear, $counter, $total, $online_donations);
+        U::writeLog(json_encode($online_donations), "prepared_details");
 //        U::writeLog($donations, "prepared_donations");
-        U::writeLog(json_encode($body), "prepared_body");
+        U::writeLog(json_encode($online_report_body), "prepared_body");
 //        U::writeLog($header, "prepared_header");
 //        U::writeLog($report_url, "report_url");
         $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
@@ -152,7 +152,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         $response = null;
         if ($counter > 0) {
 
-            $decoded = U::guzzlePost($report_url, $header, $body);
+            $decoded = U::guzzlePost($report_url, $header, $online_report_body);
 
             $sentMessage = ' > ' . json_encode($decoded);
             $response_code = $decoded['returnCode'];
@@ -163,126 +163,31 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             }
         } else CRM_Core_Session::setStatus('No data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
 
-        if ($decoded != null) {
+        parent::postProcess();
+
+        if ($decoded == null) {
+            return;
+        }
             $response_body = json_encode($decoded);
             $is_api = 1;
             $validate_only = intval($validate_only);
-            $insert_response = "INSERT INTO civicrm_o8_iras_response_log (
-                                          is_api,
-                                          validate_only,
-                                          basis_year,
-                                          organisation_id_type,
-                                          organisation_id_no,
-                                          organisation_name,
-                                          batch_indicator,
-                                          authorised_person_name,
-                                          authorised_person_designation,
-                                          telephone,
-                                          authorised_person_email,
-                                          num_of_records,
-                                          total_donation_amount,
-                                          response_body, 
-                                          response_code, 
-                                          created_date) VALUES (
-                                                                $is_api,
-                                                                $validate_only,
-                                                                '$basis_year',
-                                                                '$organisation_id_type',
-            '$organisation_id_no',
-            '$organisation_name',
-            '$batch_indicator',
-            '$authorised_person_name',
-            '$authorised_person_designation',
-            '$telephone',
-            '$authorised_person_email',
+        U::saveDonationLogs($is_api,
+            $validate_only,
+            $basis_year,
+            $organisation_id_type,
+            $organisation_id_no,
+            $organisation_name,
+            $batch_indicator,
+            $authorised_person_name,
+            $authorised_person_designation,
+            $telephone,
+            $authorised_person_email,
             $num_of_records,
-            $total_donation_amount, 
-                                                                '$response_body', 
-                                                                $response_code, 
-                                                                '$generatedDate');";
-            CRM_Core_DAO::executeQuery($insert_response, CRM_Core_DAO::$_nullArray);
-            $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
-
-            while ($result->fetch()) {
-                $response_log_id = $result->id;
-            }
-
-            foreach ($donations as $donation) {
-                $contribution_id = $donation['contribution_id'];
-                $record_id = $donation['record_id'];
-                $id_type = $donation['id_type'];
-                $id_number = $donation['id_number'];
-                $individual_indicator = $donation['individual_indicator'];
-                $contact_name = $donation['contact_name'];
-                $address_line1 = $donation['address_line1'];
-                $address_line2 = $donation['address_line2'];
-                $postal_code = $donation['postal_code'];
-                $donation_amount = $donation['donation_amount'];
-                $date_of_donation = $donation['date_of_donation'];
-                $receipt_num = $donation['receipt_num'];
-                $type_of_donation = $donation['type_of_donation'];
-                $naming_donation = $donation['naming_donation'];
-
-
-                $insert_response = "INSERT IGNORE INTO civicrm_o8_iras_donation(
-                                     contribution_id, 
-                                     created_date) VALUES ($contribution_id, '$generatedDate');";
-                CRM_Core_DAO::executeQuery($insert_response, CRM_Core_DAO::$_nullArray);
-                $get_donation_id_sql = "SELECT id from civicrm_o8_iras_donation WHERE contribution_id = $contribution_id";
-                $result = CRM_Core_DAO::executeQuery($get_donation_id_sql, CRM_Core_DAO::$_nullArray);
-//                U::writeLog($result, "get_donation_id");
-                U::writeLog($get_donation_id_sql, "get_donation_id_sql");
-                $donation_id = "NULL";
-                while ($result->fetch()) {
-                    $donation_id = $result->id;
-                }
-                if(!$donation_id){
-                    $donation_id = "NULL";
-                }
-
-                $insert_donation = "INSERT IGNORE INTO civicrm_o8_iras_donation_log(
-                                     record_id, 
-                                     id_type,             
-id_number,           
-individual_indicator,
-contact_name,                
-address_line1,       
-address_line2,      
-postal_code,         
-donation_amount,     
-date_of_donation,    
-receipt_num,         
-type_of_donation,    
-naming_donation,     
-iras_response_id,    
-iras_donation_id    ) VALUES ($record_id, 
-                                     $id_type,             
-                                    '$id_number',           
-                                    '$individual_indicator',
-                                    '$contact_name',                
-                                    '$address_line1',       
-                                    '$address_line2',      
-                                    '$postal_code',         
-                                     $donation_amount,     
-                                    '$date_of_donation',    
-                                    '$receipt_num',         
-                                    '$type_of_donation',    
-                                    '$naming_donation',
-                              $response_log_id, 
-                              $donation_id);";
-                CRM_Core_DAO::executeQuery($insert_donation, CRM_Core_DAO::$_nullArray);
-                $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
-
-                while ($result->fetch()) {
-                    $donation_log_id = $result->id;
-                }
-
-                $set_donation_log_id_sql = "UPDATE civicrm_o8_iras_donation set last_donation_log_id = $donation_log_id WHERE contribution_id = $contribution_id";
-                $result = CRM_Core_DAO::executeQuery($set_donation_log_id_sql, CRM_Core_DAO::$_nullArray);
-            }
-
-            parent::postProcess();
-        }
+            $total_donation_amount,
+            $response_body,
+            $response_code,
+            $generatedDate,
+            $donations);
     }
 
     /**

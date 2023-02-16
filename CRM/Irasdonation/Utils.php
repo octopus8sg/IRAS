@@ -611,7 +611,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
      * @return array
      */
 
-    public static function prepareBody(string $basis_year, $num_of_records, $total_donation_amount, $details): array
+    public static function prepareOnlineReportBody(string $basis_year, $num_of_records, $total_donation_amount, $details): array
     {
         $settings = CRM_Irasdonation_Utils::getSettings();
         $organisation_id_no = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_ID['slug'], $settings);
@@ -698,7 +698,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
      * @param $includePrevious
      * @return array|void
      */
-    public static function prepareOnlineReportDetails($startDate, $endDate, $includePrevious)
+    public static function prepareDonations($startDate, $endDate, $includePrevious)
     {
         $settings = self::getSettings();
         $min_amount = CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
@@ -750,54 +750,76 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         $counter = 0;
         $generatedDate = date('Y-m-d H:i:s');
 
-        $dataBody = array();
         //generate body of th report
-        $details = array();
+        $online_donations = array();
+        $offline_donations = array();
         $donations = array();
         while ($result->fetch()) {
 
-            $idType = self::parsUENNumber($result->contact_external_identifier);
+            $contact_external_identifier = $result->contact_external_identifier;
+            $idType = self::parsUENNumber($contact_external_identifier);
             if ($idType > 0) {
-                $dataBody = array(
-                    'recordID' => $counter + 1,
-                    'idType' => $idType,
-                    'idNumber' => $result->contact_external_identifier,
-                    'individualIndicator' => '',
-                    'name' => $result->contact_name,
-                    'addressLine1' => $result->address_supplemental_address_1,
-                    'addressLine2' => $result->address_supplemental_address_2,
-                    'postalCode' => $result->address_postal_code,
-                    'donationAmount' => round($result->donation_amount),
-                    'dateOfDonation' => date("Ymd", strtotime($result->date_of_donation)),
-                    'receiptNum' => $result->receipt_no,
-                    'typeOfDonation' => 'O',
-                    'namingDonation' => 'Z'
-                );
-
+                $contribution_id = $result->contribution_id;
+                $contact_name = str_replace(',', '', $result->contact_name);
+                $donation_amount = round($result->donation_amount);
+                $date_of_donation = date("Ymd", strtotime($result->date_of_donation));
+                $receipt_no = $result->receipt_no;
                 $donation = array(
-                    'contribution_id' => $result->contribution_id,
+                    'contribution_id' => $contribution_id,
                     'record_id' => $counter,
                     'id_type' => $idType,
-                    'id_number' => $result->contact_external_identifier,
+                    'id_number' => $contact_external_identifier,
                     'individual_indicator' => '',
-                    'contact_name' => $result->contact_name,
+                    'contact_name' => $contact_name,
                     'address_line1' => $result->address_supplemental_address_1,
                     'address_line2' => $result->address_supplemental_address_2,
                     'postal_code' => $result->address_postal_code,
-                    'donation_amount' => round($result->donation_amount),
-                    'date_of_donation' => date("Ymd", strtotime($result->date_of_donation)),
-                    'receipt_num' => $result->receipt_no,
+                    'donation_amount' => $donation_amount,
+                    'date_of_donation' => $date_of_donation,
+                    'receipt_num' => $receipt_no,
                     'type_of_donation' => 'O',
                     'naming_donation' => 'Z'
                 );
 
-                array_push($details, $dataBody);
+                $online_donation = array(
+                    'recordID' => $counter + 1,
+                    'idType' => $idType,
+                    'idNumber' => $contact_external_identifier,
+                    'individualIndicator' => '',
+                    'name' => $contact_name,
+                    'addressLine1' => $result->address_supplemental_address_1,
+                    'addressLine2' => $result->address_supplemental_address_2,
+                    'postalCode' => $result->address_postal_code,
+                    'donationAmount' => $donation_amount,
+                    'dateOfDonation' => $date_of_donation,
+                    'receiptNum' => $receipt_no,
+                    'typeOfDonation' => 'O',
+                    'namingDonation' => 'Z'
+                );
+
+                $offline_donation = [1,
+                    $idType,
+                    $contact_external_identifier,
+                    $contact_name,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    $donation_amount,
+                    $date_of_donation,
+                    $receipt_no,
+                    'O',
+                    'Z'];
+
+                array_push($offline_donations, $offline_donation);
+                array_push($online_donations, $online_donation);
                 array_push($donations, $donation);
-                $total += round($result->donation_amount);
+                $total += $donation_amount;
                 $counter++;
             }
         }
-        return array($totalRows, $total, $counter, $generatedDate, $details, $donations);
+        return array($totalRows, $total, $counter, $generatedDate, $donations, $online_donations, $offline_donations);
     }
 
     /**
@@ -887,9 +909,9 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
     public static function generateCsv($csvData)
     {
         $f = fopen('php://output', 'w');
-
+        $f_name = "report_" . date('dmY_His') . ".csv";
         header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="report_' . date('dmY_His') . '.csv";');
+        header('Content-Disposition: attachment; filename="' . $f_name. '";');
 
         foreach ($csvData as $row) {
             fputcsv($f, $row, ",", '\'', "\\");
@@ -898,7 +920,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
 
         fclose($f);
         // $file = fpassthru($f);
-
+        return $f_name;
     }
 
     /**
@@ -910,94 +932,154 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
      * @param $settings
      * @return array
      */
-    public static function prepareOfflineReportDetails($startDate, $endDate, $includePrevious)
+    public static function prepareOfflineReport($report_year, $organisation_id, $total, $counter, $offline_donations)
     {
-        $reportYear = date("Y");
-        if ($startDate != null) {
-            $reportYear = date("Y", strtotime($startDate));
-        };
-        $settings = CRM_Irasdonation_Utils::getSettings();
-        $prefix = CRM_Utils_Array::value(CRM_Irasdonation_Utils::PREFIX['slug'], $settings);
-        $organisation_id = CRM_Utils_Array::value(CRM_Irasdonation_Utils::ORGANISATION_ID['slug'], $settings);
-        $min_amount = CRM_Utils_Array::value(CRM_Irasdonation_Utils::MIN_AMOUNT['slug'], $settings);
-
-        $csvData = array();
-        $dataBody = array();
-        $dataHead = [0, 7, $reportYear, 7, 0, $organisation_id, null, null, null, null, null, null, null, null];
-        array_push($csvData, $dataHead);
-
-        $where = "UPPER(cdnlog.receipt_status)='ISSUED'";
-
-        if ($includePrevious == 0) {
-            $where .= " AND cdnlog.id NOT IN 
-        (SELECT iras_donation.cdntaxreceipts_log_id FROM civicrm_o8_iras_donation iras_donation 
-        WHERE iras_donation.created_date IS NOT NULL) ";
-        }
-        if ($startDate != null) {
-            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) >= '$startDate'";
-        }
-        if ($endDate != null) {
-            $where .= " AND FROM_UNIXTIME(cdnlog.issued_on) <= '$endDate'";
-        }
-        if ($min_amount != null) {
-            $where .= " AND cdnlog.receipt_amount >= $min_amount";
-        }
-
-        $sql = "SELECT 
-      cdnlog.id, 
-      cont.sort_name, 
-      cont.external_identifier,
-      cdnlog.receipt_amount,
-      CONCAT('$prefix', LPAD(RIGHT(cdnlogcontrib.contribution_id, 7), 7, 0)) receipt_no,
-      FROM_UNIXTIME(cdnlog.issued_on) issued_on,
-      contrib.receive_date
-      FROM cdntaxreceipts_log cdnlog 
-      INNER JOIN cdntaxreceipts_log_contributions cdnlogcontrib ON cdnlogcontrib.receipt_id = cdnlog.id
-      INNER JOIN civicrm_contribution contrib ON contrib.id = cdnlogcontrib.contribution_id  
-      INNER JOIN civicrm_contact cont ON cont.id = cdnlog.contact_id 
-      INNER JOIN civicrm_financial_type fintype ON fintype.id = contrib.financial_type_id   
-      WHERE $where
-      LIMIT 5000";
-
-        $result = CRM_Core_DAO::executeQuery($sql, CRM_Core_DAO::$_nullArray);
-
-        $insert = '';
-        $total = 0;
-        $counter = 0;
-        $genDate = date('Y-m-d H:i:s');
-        $saveReport = array();
-
-        //generate body of th report
-        while ($result->fetch()) {
-
-            $idType = CRM_Irasdonation_Utils::parsUENNumber($result->external_identifier);
-            if ($idType > 0) {
-                $dataBody = [1,
-                    $idType,
-                    $result->external_identifier,
-                    str_replace(',', '', $result->sort_name),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    $result->receipt_amount,
-                    date("Ymd", strtotime($result->issued_on)),
-                    $result->receipt_no,
-                    'O',
-                    'Z'];
-                array_push($saveReport, $result->id);
-
-                array_push($csvData, $dataBody);
-                $total += $result->receipt_amount;
-                $counter++;
-            }
-        }
+        $offline_report_csv = array();
+        $dataHead = [0, 7, $report_year, 7, 0, $organisation_id, null, null, null, null, null, null, null, null];
+        array_push($offline_report_csv, $dataHead);
+        $offline_report_csv[] = $offline_donations;
+        $offline_report_csv = array_merge($offline_report_csv, $offline_donations);
 
         //generate buttom line of the report
         $dataBottom = [2, $counter, $total, null, null, null, null, null, null, null, null, null, null, null];
-        array_push($csvData, $dataBottom);
-        return array($csvData, $genDate, $saveReport, $dataBody);
+        array_push($offline_report_csv, $dataBottom);
+        return $offline_report_csv;
+    }
+
+    /**
+     * @param int $is_api
+     * @param int $validate_only
+     * @param $basis_year
+     * @param $organisation_id_type
+     * @param $organisation_id_no
+     * @param $organisation_name
+     * @param $batch_indicator
+     * @param $authorised_person_name
+     * @param $authorised_person_designation
+     * @param $telephone
+     * @param $authorised_person_email
+     * @param $num_of_records
+     * @param $total_donation_amount
+     * @param string $response_body
+     * @param $response_code
+     * @param $generatedDate
+     * @param $donations
+     */
+    public static function saveDonationLogs(int $is_api, int $validate_only, $basis_year, $organisation_id_type, $organisation_id_no, $organisation_name, $batch_indicator, $authorised_person_name, $authorised_person_designation, $telephone, $authorised_person_email, $num_of_records, $total_donation_amount, string $response_body, $response_code, $generatedDate, $donations): void
+    {
+        $insert_response = "INSERT INTO civicrm_o8_iras_response_log (
+                                          is_api,
+                                          validate_only,
+                                          basis_year,
+                                          organisation_id_type,
+                                          organisation_id_no,
+                                          organisation_name,
+                                          batch_indicator,
+                                          authorised_person_name,
+                                          authorised_person_designation,
+                                          telephone,
+                                          authorised_person_email,
+                                          num_of_records,
+                                          total_donation_amount,
+                                          response_body, 
+                                          response_code, 
+                                          created_date) VALUES (
+                                                                $is_api,
+                                                                $validate_only,
+                                                                '$basis_year',
+                                                                '$organisation_id_type',
+            '$organisation_id_no',
+            '$organisation_name',
+            '$batch_indicator',
+            '$authorised_person_name',
+            '$authorised_person_designation',
+            '$telephone',
+            '$authorised_person_email',
+            $num_of_records,
+            $total_donation_amount, 
+                                                                '$response_body', 
+                                                                $response_code, 
+                                                                '$generatedDate');";
+        CRM_Core_DAO::executeQuery($insert_response, CRM_Core_DAO::$_nullArray);
+        $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
+
+        while ($result->fetch()) {
+            $response_log_id = $result->id;
+        }
+
+        foreach ($donations as $donation) {
+            $contribution_id = $donation['contribution_id'];
+            $record_id = $donation['record_id'];
+            $id_type = $donation['id_type'];
+            $id_number = $donation['id_number'];
+            $individual_indicator = $donation['individual_indicator'];
+            $contact_name = $donation['contact_name'];
+            $address_line1 = $donation['address_line1'];
+            $address_line2 = $donation['address_line2'];
+            $postal_code = $donation['postal_code'];
+            $donation_amount = $donation['donation_amount'];
+            $date_of_donation = $donation['date_of_donation'];
+            $receipt_num = $donation['receipt_num'];
+            $type_of_donation = $donation['type_of_donation'];
+            $naming_donation = $donation['naming_donation'];
+
+
+            $insert_response = "INSERT IGNORE INTO civicrm_o8_iras_donation(
+                                     contribution_id, 
+                                     created_date) VALUES ($contribution_id, '$generatedDate');";
+            CRM_Core_DAO::executeQuery($insert_response, CRM_Core_DAO::$_nullArray);
+            $get_donation_id_sql = "SELECT id from civicrm_o8_iras_donation WHERE contribution_id = $contribution_id";
+            $result = CRM_Core_DAO::executeQuery($get_donation_id_sql, CRM_Core_DAO::$_nullArray);
+//                U::writeLog($result, "get_donation_id");
+            CRM_Irasdonation_Utils::writeLog($get_donation_id_sql, "get_donation_id_sql");
+            $donation_id = "NULL";
+            while ($result->fetch()) {
+                $donation_id = $result->id;
+            }
+            if (!$donation_id) {
+                $donation_id = "NULL";
+            }
+
+            $insert_donation = "INSERT IGNORE INTO civicrm_o8_iras_donation_log(
+                                     record_id, 
+                                     id_type,             
+id_number,           
+individual_indicator,
+contact_name,                
+address_line1,       
+address_line2,      
+postal_code,         
+donation_amount,     
+date_of_donation,    
+receipt_num,         
+type_of_donation,    
+naming_donation,     
+iras_response_id,    
+iras_donation_id    ) VALUES ($record_id, 
+                                     $id_type,             
+                                    '$id_number',           
+                                    '$individual_indicator',
+                                    '$contact_name',                
+                                    '$address_line1',       
+                                    '$address_line2',      
+                                    '$postal_code',         
+                                     $donation_amount,     
+                                    '$date_of_donation',    
+                                    '$receipt_num',         
+                                    '$type_of_donation',    
+                                    '$naming_donation',
+                              $response_log_id, 
+                              $donation_id);";
+            CRM_Core_DAO::executeQuery($insert_donation, CRM_Core_DAO::$_nullArray);
+            $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
+
+            while ($result->fetch()) {
+                $donation_log_id = $result->id;
+            }
+
+            $set_donation_log_id_sql = "UPDATE civicrm_o8_iras_donation set last_donation_log_id = $donation_log_id WHERE contribution_id = $contribution_id";
+            $result = CRM_Core_DAO::executeQuery($set_donation_log_id_sql, CRM_Core_DAO::$_nullArray);
+        }
     }
 
 }

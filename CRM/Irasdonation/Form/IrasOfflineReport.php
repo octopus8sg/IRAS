@@ -47,46 +47,76 @@ class CRM_Irasdonation_Form_IrasOfflineReport extends CRM_Core_Form
 
         $values = $this->exportValues();
         $firstDayOfYear = date('Y-01-01');
-        $lastDayOfYear = date('Y-12-t');
-        $startDate = CRM_Utils_Array::value('start_date', $values, $firstDayOfYear);
-        $endDate = CRM_Utils_Array::value('end_date', $values, $lastDayOfYear);
+        $lastDayOfYear = date('Y-12-31');
+        $startDate = CRM_Utils_Array::value('start_date', $values, null);
+        $endDate = CRM_Utils_Array::value('end_date', $values, null);
         $includePrevious = $values["include_previous"];
         $reportYear = date("Y");
+        if (!$startDate) {
+            $startDate = $firstDayOfYear;
+        };
+        if (!$endDate) {
+            $endDate = $lastDayOfYear;
+        };
         if ($startDate != null) {
             $reportYear = date("Y", strtotime($startDate));
         };
-
+//        U::writeLog($startDate, "startDate");
+//        U::writeLog($endDate, "endDate");
+//        U::writeLog(strval($includePrevious), "includePrevious");
         if (date("Y", strtotime($endDate)) != date("Y", strtotime($startDate))) {
             CRM_Core_Session::setStatus('Selected Date must be in the same year', ts('Date range incorrect'), 'warning', array('expires' => 5000));
             return;
         }
 
-        //generate header of report
-        list($csvData, $genDate, $saveReport, $dataBody) = CRM_Irasdonation_Utils::prepareOfflineReportDetails($startDate, $endDate, $includePrevious);
+        //get donations
 
-        //return 0;
-        if (count($saveReport) > 0) {
-            $log_id = 0;
-
-            $insert = "INSERT INTO civicrm_o8_iras_response_log(response_code, response_body, created_date) VALUES (10, '', '$genDate');";
-            CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
-            $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
-
-            while ($result->fetch()) {
-                $log_id = $result->id;
-            }
-
-            foreach ($saveReport as $value) {
-                $insert = "INSERT INTO civicrm_o8_iras_donation(cdntaxreceipts_log_id, is_api, log_id, created_date) VALUES ($value, 0, $log_id, '$genDate');";
-                CRM_Core_DAO::executeQuery($insert, CRM_Core_DAO::$_nullArray);
-            }
+        list($totalRows, $total, $counter, $generatedDate, $donations, $online_donations, $offline_donations) = U::prepareDonations($startDate, $endDate, $includePrevious);
+        if ($totalRows > 5000) {
+            CRM_Core_Session::setStatus('You have more than 5000 records, please select smaller period of time', ts('Date range incorrect'), 'warning', array('expires' => 5000));
         }
+        //prepare header
+        //return 0;
+        if ($counter > 0) {
+            $offline_report_csv = CRM_Irasdonation_Utils::prepareOfflineReport($reportYear, $organisation_id, $total, $counter, $offline_donations);
+            list($online_report_body,
+                $validate_only,
+                $basis_year,
+                $organisation_id_type,
+                $organisation_id_no,
+                $organisation_name,
+                $batch_indicator,
+                $authorised_person_name,
+                $authorised_person_designation,
+                $telephone,
+                $authorised_person_email,
+                $num_of_records,
+                $total_donation_amount) = U::prepareOnlineReportBody($reportYear, $counter, $total, $online_donations);
 
-        if (count($dataBody) > 0) {
-            U::generateCsv($csvData);
+            $response_body = U::generateCsv($offline_report_csv);
             CRM_Core_Session::setStatus('File generated successfully', ts('File Generation'), 'success', array('expires' => 10000));
+            $response_code = 10;
+            $is_api = 0;
+            $validate_only = intval($validate_only);
+            U::saveDonationLogs($is_api,
+                $validate_only,
+                $basis_year,
+                $organisation_id_type,
+                $organisation_id_no,
+                $organisation_name,
+                $batch_indicator,
+                $authorised_person_name,
+                $authorised_person_designation,
+                $telephone,
+                $authorised_person_email,
+                $num_of_records,
+                $total_donation_amount,
+                $response_body,
+                $response_code,
+                $generatedDate,
+                $donations);
             exit();
-        } else CRM_Core_Session::setStatus('No any data to generate report', ts('All reports are generated'), 'success', array('expires' => 10000));
+        } else CRM_Core_Session::setStatus('No data to generate report', ts('All reports are generated'), 'success', array('expires' => 10000));
 
         parent::postProcess();
     }
