@@ -708,15 +708,15 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         $where = " contact.external_identifier IS NOT NULL AND contribution.contribution_status_id = $completed ";
 
         if ($includePrevious == 0) {
-            $where .= " AND donation.id NOT IN (select donation_log.iras_donation_id from civicrm_o8_iras_donation_log donation_log)";
+            $where .= " AND donation.id IS NULL";
         }
 
         if ($startDate != null) {
             $where .= " AND contribution.receive_date >= '$startDate'";
         }
 
-        if ($startDate != null) {
-            $endDate .= " AND contribution.receive_date <= '$startDate'";
+        if ($endDate != null) {
+            $where .= " AND contribution.receive_date <= '$endDate'";
         }
 
         if ($min_amount != null) {
@@ -793,7 +793,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
 
                 array_push($details, $dataBody);
                 array_push($donations, $donation);
-                $total += $result->donation_amount;
+                $total += round($result->donation_amount);
                 $counter++;
             }
         }

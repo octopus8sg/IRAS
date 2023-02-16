@@ -101,7 +101,9 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         if ($startDate != null) {
             $reportYear = date("Y", strtotime($startDate));
         };
-
+        U::writeLog($startDate, "startDate");
+        U::writeLog($endDate, "endDate");
+        U::writeLog(strval($includePrevious), "includePrevious");
         if (date("Y", strtotime($endDate)) != date("Y", strtotime($startDate))) {
             CRM_Core_Session::setStatus('Selected Date must be in the same year', ts('Date range incorrect'), 'warning', array('expires' => 5000));
             return;
@@ -138,11 +140,11 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             $authorised_person_email,
             $num_of_records,
             $total_donation_amount) = U::prepareBody($reportYear, $counter, $total, $details);
-        U::writeLog($details, "prepared_details");
-        U::writeLog($donations, "prepared_donations");
-        U::writeLog($body, "prepared_body");
-        U::writeLog($header, "prepared_header");
-        U::writeLog($report_url, "report_url");
+        U::writeLog(json_encode($details), "prepared_details");
+//        U::writeLog($donations, "prepared_donations");
+        U::writeLog(json_encode($body), "prepared_body");
+//        U::writeLog($header, "prepared_header");
+//        U::writeLog($report_url, "report_url");
         $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
 
         $session->pushUserContext($url);
