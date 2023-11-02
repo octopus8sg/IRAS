@@ -12,8 +12,12 @@
   <br>
   
   <div>
-    <span>{$form.include_previous.label}</span>
     <span>{$form.include_previous.html}</span>
+    <span>{$form.include_previous.label}</span>
+  </div>
+  <div>
+    <span>{$form.ammendment.html}</span>
+    <span>{$form.ammendment.label}</span>
   </div>
   <br>
 

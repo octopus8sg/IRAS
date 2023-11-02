@@ -19,11 +19,11 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         $validate_only = U::getValidateOnly();
         if (!$validate_only) {
             $iras_access_token = $session->get(U::ACCESSTOKEN);
-            U::writeLog($iras_access_token, "iras_access_token");
+//            U::writeLog($iras_access_token, "iras_access_token");
             $iras_login_time = $session->get(U::LOGINTIME);
-            U::writeLog($iras_login_time, "iras_login_time");
+//            U::writeLog($iras_login_time, "iras_login_time");
             $iras_login_time_diff = time() - $iras_login_time;
-            U::writeLog($iras_login_time_diff, "iras_login_time_diff");
+//            U::writeLog($iras_login_time_diff, "iras_login_time_diff");
             $irasLoginURL = U::getIrasLoginURL();
             $callbackURL = U::getCallbackURL();
             $iras_logged = true;
@@ -38,7 +38,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
                 $state = uniqid();
                 $session->set(U::STATE, $state);
                 $irasLoginFullURL = "$irasLoginURL?scope=DonationSub&callback_url=$callbackURL&tax_agent=false&state=$state";
-                U::writeLog($irasLoginFullURL, 'irasLoginFullURL');
+//                U::writeLog($irasLoginFullURL, 'irasLoginFullURL');
                 $loginresponse = U::getLoginResponse($irasLoginFullURL);
 
                 try {
@@ -46,7 +46,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
                 } catch (Exception $e) {
                     throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
                 }
-                U::writeLog($irasLoginRealURL, 'irasLoginRealURL');
+//                U::writeLog($irasLoginRealURL, 'irasLoginRealURL');
                 CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
                 CRM_Utils_System::redirect($irasLoginRealURL);
                 CRM_Utils_System::civiExit();
@@ -61,6 +61,9 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
 
         // //include previously generateed reports
         $this->add('advcheckbox', 'include_previous', ts('Include receipts previously generated'));
+
+        // //include previously generateed reports
+        $this->add('advcheckbox', 'ammendment', ts('Send as amendment'));
 
         $this->addButtons(array(
             array(
@@ -88,6 +91,8 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         $values = $this->exportValues();
         $firstDayOfYear = date('Y-01-01');
         $lastDayOfYear = date('Y-12-31');
+        $ammendment = boolval(CRM_Utils_Array::value('ammendment', $values, 0));
+//        U::writeLog($ammendment, "ammendment");
         $startDate = CRM_Utils_Array::value('start_date', $values, null);
         $endDate = CRM_Utils_Array::value('end_date', $values, null);
         $includePrevious = $values["include_previous"];
@@ -112,82 +117,117 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         //get donations
 
         list($totalRows, $total, $counter, $generatedDate, $donations, $online_donations, $offline_donations) = U::prepareDonations($startDate, $endDate, $includePrevious);
-        if ($totalRows > 5000) {
-            CRM_Core_Session::setStatus('You have more than 5000 records, please select smaller period of time', ts('Date range incorrect'), 'warning', array('expires' => 5000));
-        }
         //prepare header
         $session = CRM_Core_Session::singleton();
+        if ($counter == 0) {
+            CRM_Core_Session::setStatus('No data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
+            return;
+        }
+
         $header = U::prepareHeader();
         $validate_only = U::getValidateOnly();
         if (!$validate_only) {
             $iras_access_token = $session->get(U::ACCESSTOKEN);
             $header = U::prepareHeader($iras_access_token);
-            U::writeLog($iras_access_token, "iras_access_token");
+//            U::writeLog($iras_access_token, "iras_access_token");
         }
 
         //prepare online_report_body
         $report_url = U::getIrasReportURL();
-        list($online_report_body,
-            $validate_only,
-            $basis_year,
-            $organisation_id_type,
-            $organisation_id_no,
-            $organisation_name,
-            $batch_indicator,
-            $authorised_person_name,
-            $authorised_person_designation,
-            $telephone,
-            $authorised_person_email,
-            $num_of_records,
-            $total_donation_amount) = U::prepareOnlineReportBody($reportYear, $counter, $total, $online_donations);
-        U::writeLog(json_encode($online_donations), "prepared_details");
+        $batch_indicator = "O";
+        if ($ammendment) {
+            $batch_indicator = "A";
+        }
+// Initialize Guzzle client
+
+// Split records into chunks of 1000
+        $chunks = array_chunk($online_donations, 1000);
+        $donation_chunks = array_chunk($donations, 1000);
+//      $chunks = [$allchunks[0]];
+// Loop through each chunk and send a POST request
+        $total = 0;
+        $counter = 0;
+        foreach ($chunks as $key => $chunk) {
+            $donation_chunk = $donation_chunks[$key];
+            // Calculate the total amount for the chunk
+            $total = array_reduce($chunk, function ($carry, $record) {
+                return $carry + $record['donationAmount'];
+            }, 0);
+            $counter = sizeof($chunk);
+            $i = 1;
+            foreach ($chunk as $key => $record) {
+                $record['recordID'] = $key + 1;
+                $chunk[$key] = $record;
+            }
+//            U::writeLog($chunk[5], "chunk_5");
+            list($online_report_body,
+                $validate_only,
+                $basis_year,
+                $organisation_id_type,
+                $organisation_id_no,
+                $organisation_name,
+                $batch_indicator,
+                $authorised_person_name,
+                $authorised_person_designation,
+                $telephone,
+                $authorised_person_email,
+                $num_of_records,
+                $total_donation_amount) = U::prepareOnlineReportBody($reportYear, $counter, $total, $chunk, $batch_indicator);
+
+//            U::writeLog(json_encode($chunk), "prepared_details");
 //        U::writeLog($donations, "prepared_donations");
-        U::writeLog(json_encode($online_report_body), "prepared_body");
+            $json_send_message = json_encode($online_report_body, JSON_PRETTY_PRINT);
+            U::writeLog(strlen($json_send_message), "Message to send to IRAS size");
+            if(strlen($json_send_message) < 10000){
+                U::writeLog($json_send_message, "Message to send to IRAS");
+            }
 //        U::writeLog($header, "prepared_header");
 //        U::writeLog($report_url, "report_url");
-        $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
+            $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
 
-        $session->pushUserContext($url);
+            $session->pushUserContext($url);
 
-        $response = null;
-        if ($counter > 0) {
+            $response = null;
 
             $decoded = U::guzzlePost($report_url, $header, $online_report_body);
-
-            $sentMessage = ' > ' . json_encode($decoded);
+            $json_received_message = json_encode($decoded, JSON_PRETTY_PRINT);
+            U::writeLog($json_received_message, "recieved message");
+            $receivedMessage = ' > ' . $json_received_message;
             $response_code = $decoded['returnCode'];
             if ($response_code == 10) {
                 CRM_Core_Session::setStatus('Data sucessfully sent to IRAS', ts('Report sending status'), 'success', array('expires' => 5000));
             } else {
-                CRM_Core_Session::setStatus($sentMessage, ts('Report sending status'), 'error', array('expires' => 5000));
+                CRM_Core_Session::setStatus($receivedMessage, ts('Report sending status'), 'error', array('expires' => 5000));
             }
-        } else CRM_Core_Session::setStatus('No data to generate report', ts('All reports are generated'), 'success', array('expires' => 5000));
 
-        parent::postProcess();
 
-        if ($decoded == null) {
-            return;
-        }
+            if ($decoded == null) {
+                return;
+            }
             $response_body = json_encode($decoded);
             $is_api = 1;
             $validate_only = intval($validate_only);
-        U::saveDonationLogs($is_api,
-            $validate_only,
-            $basis_year,
-            $organisation_id_type,
-            $organisation_id_no,
-            $organisation_name,
-            $batch_indicator,
-            $authorised_person_name,
-            $authorised_person_designation,
-            $telephone,
-            $authorised_person_email,
-            $num_of_records,
-            $total_donation_amount,
-            $response_body,
-            $response_code,
-            $generatedDate,
-            $donations);
+
+            U::saveDonationLogs($is_api,
+                $validate_only,
+                $basis_year,
+                $organisation_id_type,
+                $organisation_id_no,
+                $organisation_name,
+                $batch_indicator,
+                $authorised_person_name,
+                $authorised_person_designation,
+                $telephone,
+                $authorised_person_email,
+                $num_of_records,
+                $total_donation_amount,
+                $response_body,
+                $response_code,
+                $generatedDate,
+                $donation_chunk);
+        }
+        parent::postProcess();
+
     }
 
     /**

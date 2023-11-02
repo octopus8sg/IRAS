@@ -65,7 +65,59 @@ class CRM_Irasdonation_Upgrader extends CRM_Irasdonation_Upgrader_Base {
        $settings[U::PREFIX['slug']] = "OCT";
        $settings[U::MIN_AMOUNT['slug']] = 1;
        CRM_Core_BAO_Setting::setItem($settings, U::SETTINGS_NAME, U::SETTINGS_SLUG);
+       $this->create_custom_fields();
    }
+
+    static function create_custom_fields()
+    {
+        self::createContributionCustomFields();
+//        self::createContactCustomFields();
+    }
+
+    protected static function createContributionCustomFields(): void
+    {
+        $custom_group_id = U::get_custom_group_id(U::IRAS_CONTRIBUTION_CUSTOM_GROUP, ['Contribution']);
+//        U::writeLog($custom_group_id);
+        if ($custom_group_id > 0) {
+            // check if the custom fields exist.  if not, create them.
+            $custom_fields = [U::IRAS_INDIVIDUAL_INDICATOR, U::IRAS_TYPE_OF_DONATION, U::IRAS_NAMING_DONATION];
+            $field_params = array(
+                'custom_group_id' => $custom_group_id,
+                'data_type' => 'String',
+                'html_type' => 'Select',
+                'is_required' => 1,
+                'is_active' => 1,
+                'is_view' => 0,
+                'version' => 3,
+            );
+            foreach ($custom_fields as $field) {
+                if (!U::_custom_field_exists($custom_group_id, $field)) {
+                    if ($field === U::IRAS_INDIVIDUAL_INDICATOR) {
+                        $field_params["label"] = $field;
+                        $field_params["name"] = CRM_Utils_String::munge($field, '_', 64);
+                        $field_params["help_post"] = U::IRAS_INDIVIDUAL_INDICATOR_HELP;
+                        $field_params["option_values"] = U::IRAS_INDIVIDUAL_INDICATOR_OPTIONS;
+                        $field_params["default_value"] = U::IRAS_INDIVIDUAL_INDICATOR_DEFAULT;
+                    }
+                    if ($field === U::IRAS_TYPE_OF_DONATION) {
+                        $field_params["label"] = $field;
+                        $field_params["name"] = CRM_Utils_String::munge($field, '_', 64);
+                        $field_params["help_post"] = U::IRAS_TYPE_OF_DONATION_HELP;
+                        $field_params["option_values"] = U::IRAS_TYPE_OF_DONATION_OPTIONS;
+                        $field_params["default_value"] = U::IRAS_TYPE_OF_DONATION_DEFAULT;
+                    }
+                    if ($field === U::IRAS_NAMING_DONATION) {
+                        $field_params["label"] = $field;
+                        $field_params["name"] = CRM_Utils_String::munge($field, '_', 64);
+                        $field_params["help_post"] = U::IRAS_NAMING_DONATION_HELP;
+                        $field_params["option_values"] = U::IRAS_NAMING_DONATION_OPTIONS;
+                        $field_params["default_value"] = U::IRAS_NAMING_DONATION_DEFAULT;
+                    }
+                    civicrm_api('custom_field', 'create', $field_params);
+                }
+            }
+        }
+    }
 
   /**
    * Example: Run a simple query when a module is disabled.
