@@ -13,21 +13,29 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
 
     public function buildQuickForm()
     {
-        $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report');
+        $url = CRM_Utils_System::url('civicrm/irasdonation/iras_online_report', null, true);
         $session = CRM_Core_Session::singleton();
+
         $session->pushUserContext($url);
+//        U::writeLog($url, 'pushedUrl');
         $validate_only = U::getValidateOnly();
         if (!$validate_only) {
             $iras_access_token = $session->get(U::ACCESSTOKEN);
-//            U::writeLog($iras_access_token, "iras_access_token");
+            if (!$iras_access_token) {
+                $iras_access_token = U::getSettings(U::ACCESSTOKEN);
+            }
+            U::writeLog($iras_access_token, "iras_access_token");
             $iras_login_time = $session->get(U::LOGINTIME);
-//            U::writeLog($iras_login_time, "iras_login_time");
+            if (!$iras_login_time) {
+                $iras_login_time = U::getSettings(U::LOGINTIME);
+            }
+            U::writeLog($iras_login_time, "iras_login_time");
             $iras_login_time_diff = time() - $iras_login_time;
-//            U::writeLog($iras_login_time_diff, "iras_login_time_diff");
+            U::writeLog($iras_login_time_diff, "iras_login_time_diff");
             $irasLoginURL = U::getIrasLoginURL();
             $callbackURL = U::getCallbackURL();
             $iras_logged = true;
-//        CRM_Core_Error::debug_var('decoded', $decoded);
+
             if (!$iras_access_token) {
                 $iras_logged = false;
             }
@@ -37,20 +45,53 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             if (!$iras_logged) {
                 $state = uniqid();
                 $session->set(U::STATE, $state);
+                U::setSettings($state, $url);
                 $irasLoginFullURL = "$irasLoginURL?scope=DonationSub&callback_url=$callbackURL&tax_agent=false&state=$state";
-//                U::writeLog($irasLoginFullURL, 'irasLoginFullURL');
-                $loginresponse = U::getLoginResponse($irasLoginFullURL);
-
+                U::writeLog($irasLoginFullURL, 'irasLoginFullURL');
+                try {
+                    $loginresponse = U::getLoginResponse($irasLoginFullURL);
+                } catch (\Exception $exception) {
+                    self::writeLog($exception->getMessage());
+                    return null;
+                }
+                U::writeLog($loginresponse, 'loginresponse');
+                try {
+                    if (isset($loginresponse['data'])) {
+                        U::writeLog($loginresponse['data'], 'loginresponsedata');
+                    } else {
+                        U::showErrorMessage('Server is not working');
+                        CRM_Utils_System::civiExit();
+                    }
+                } catch (\Exception $exception) {
+                    self::writeLog($exception->getMessage());
+                    return null;
+                }
                 try {
                     $irasLoginRealURL = $loginresponse['data']['url'];
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
+                    self::writeLog($e->getMessage());
                     throw new CRM_Core_Exception('Error: Not a JSON in Response error: ' . $e->getMessage());
                 }
-//                U::writeLog($irasLoginRealURL, 'irasLoginRealURL');
-                CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
-                CRM_Utils_System::redirect($irasLoginRealURL);
-                CRM_Utils_System::civiExit();
-                exit;
+                U::writeLog($irasLoginRealURL, 'irasLoginRealURL');
+//                CRM_Core_Session::setStatus('You have no CorpPASS access token', ts('IRAS LOG IN'), 'warning', array('expires' => 5000));
+                try {
+                    CRM_Utils_System::redirect($irasLoginRealURL);
+                } catch (\Exception $e) {
+                    self::writeLog($e->getMessage());
+                    throw new CRM_Core_Exception('Error: ' . $e->getMessage());
+                }
+                try {
+                    CRM_Utils_System::civiExit();
+                } catch (\Exception $e) {
+                    self::writeLog($e->getMessage());
+                    throw new CRM_Core_Exception('Error: ' . $e->getMessage());
+                }
+                try {
+                    exit;
+                } catch (Exception $e) {
+                    self::writeLog($e->getMessage());
+                    throw new CRM_Core_Exception('Error: ' . $e->getMessage());
+                }
             }
         }
         //start report from
@@ -128,6 +169,9 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
         $validate_only = U::getValidateOnly();
         if (!$validate_only) {
             $iras_access_token = $session->get(U::ACCESSTOKEN);
+            if (!$iras_access_token) {
+                $iras_access_token = U::getSettings(U::ACCESSTOKEN);
+            }
             $header = U::prepareHeader($iras_access_token);
 //            U::writeLog($iras_access_token, "iras_access_token");
         }
@@ -178,7 +222,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
 //        U::writeLog($donations, "prepared_donations");
             $json_send_message = json_encode($online_report_body, JSON_PRETTY_PRINT);
             U::writeLog(strlen($json_send_message), "Message to send to IRAS size");
-            if(strlen($json_send_message) < 10000){
+            if (strlen($json_send_message) < 10000) {
                 U::writeLog($json_send_message, "Message to send to IRAS");
             }
 //        U::writeLog($header, "prepared_header");
@@ -193,7 +237,7 @@ class CRM_Irasdonation_Form_IrasOnlineReport extends CRM_Core_Form
             $json_received_message = json_encode($decoded, JSON_PRETTY_PRINT);
             U::writeLog($json_received_message, "recieved message");
             $receivedMessage = ' > ' . $json_received_message;
-            $response_code = $decoded['returnCode'];
+            $response_code = intval($decoded['returnCode']);
             if ($response_code == 10) {
                 CRM_Core_Session::setStatus('Data sucessfully sent to IRAS', ts('Report sending status'), 'success', array('expires' => 5000));
             } else {

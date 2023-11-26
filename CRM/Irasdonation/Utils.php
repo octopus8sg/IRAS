@@ -161,15 +161,14 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
         $session = CRM_Core_Session::singleton();
         $code = CRM_Utils_Request::retrieveValue('code', 'String', null);
         $state = CRM_Utils_Request::retrieveValue('state', 'String', null);
-//        self::writeLog($code, 'code');
-//        self::writeLog($state, 'state');
-//        $selfstate = $session->get(self::STATE);
-//        if ($selfstate != $state) {
-//            print_r(['code' => $code, 'state' => $state]);
-//            return print_r(['code' => $code, 'state' => $state], true);
-//        }
-        $url = self::getIrasTokenURL();
         $redirectUrl = $session->popUserContext();
+        if (!$redirectUrl) {
+            $redirectUrl = self::getSettings($state);
+        }
+        if (!$redirectUrl) {
+            print_r(['code' => $code, 'state' => $state, 'redirectUrl' => $redirectUrl]);
+        }
+        $url = self::getIrasTokenURL();
         $callbackUrl = self::getCallbackURL();
         $body = array(
             'code' => $code,
@@ -177,20 +176,32 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
             'callback_url' => $callbackUrl,
             'state' => $state,
         );
+        try {
         $header = self::prepareHeader();
-        $decoded = self::guzzlePost($url, $header, $body);
+        } catch (\Exception $e) {
+            self::writeLog($e->getMessage());
+            throw new CRM_Core_Exception('No token in a JSON in Response error: ' . $e->getMessage());
+        }
+        try {
+            $decoded = self::guzzlePost($url, $header, $body);
+        } catch (\Exception $e) {
+            self::writeLog($e->getMessage());
+            throw new CRM_Core_Exception('No token in a JSON in Response error: ' . $e->getMessage());
+        }
         try {
             $access_token = $decoded['data']['token'];
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            self::writeLog($e->getMessage());
             throw new CRM_Core_Exception('No token in a JSON in Response error: ' . $e->getMessage());
         }
 
         $now = time();
 
-        $session->set(SELF::ACCESSTOKEN, $access_token);
+        $session->set(self::ACCESSTOKEN, $access_token);
+        self::setSettings(self::ACCESSTOKEN, $access_token);
 //        self::writeLog($access_token, "access_token");
-        $session->set(SELF::LOGINTIME, $now);
-
+        $session->set(self::LOGINTIME, $now);
+        self::setSettings(self::LOGINTIME, $now);
 //        self::writeLog($redirectUrl, "redirect_url");
         CRM_Utils_System::redirect($redirectUrl);
     }
@@ -222,6 +233,7 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
                 return;
             }
         } catch (\Exception $exception) {
+            self::writeLog($exception->getMessage());
             $error_message = $exception->getMessage();
             $error_title = 'Dmszoho Configuration Required';
             self::showErrorMessage($error_message, $error_title);
@@ -241,6 +253,7 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
             }
             return $result;
         } catch (\Exception $exception) {
+            self::writeLog($exception->getMessage());
             $error_message = $exception->getMessage();
             $error_title = 'Write Log Config Required';
             self::showErrorMessage($error_message, $error_title);
@@ -260,6 +273,7 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
             }
             return $result;
         } catch (\Exception $exception) {
+            self::writeLog($exception->getMessage());
             $error_message = $exception->getMessage();
             $error_title = 'Validate Only Config Required';
             self::showErrorMessage($error_message, $error_title);
@@ -277,6 +291,7 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
             $result = $result . "/Authentication/CorpPassAuth";
             return $result;
         } catch (\Exception $exception) {
+            self::writeLog($exception->getMessage());
             $error_message = $exception->getMessage();
             $error_title = 'Iras Login Config Required';
             self::showErrorMessage($error_message, $error_title);
@@ -375,13 +390,23 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
      */
     public static function getLoginResponse($url)
     {
-        $clientID = self::getClientID();
+//        $clientID = self::getClientID();
 //        self::writeLog($clientID, "clientID");
-        $clientSecret = self::getClientSecret();
+//        $clientSecret = self::getClientSecret();
 //        self::writeLog($clientSecret, "clientSecret");
 //        self::writeLog($url, "url");
-        $header = self::prepareHeader();
-        $decodedresponse = self::guzzleGet($url, $header);
+        try {
+            $header = self::prepareHeader();
+        } catch (\Exception $exception) {
+            self::writeLog($exception->getMessage());
+            return null;
+        }
+        try {
+            $decodedresponse = self::guzzleGet($url, $header);
+        } catch (\Exception $exception) {
+            self::writeLog($exception->getMessage());
+            return null;
+        }
         return $decodedresponse;
     }
 
@@ -478,6 +503,17 @@ F = Name Facility (where a facility belonging to an IPC has been named after the
             }
             return $return_setting;
         }
+    }
+
+
+    public static function setSettings($setting_name, $setting_value)
+    {
+        $settings = CRM_Core_BAO_Setting::getItem(self::SETTINGS_NAME, self::SETTINGS_SLUG);
+        if (is_array($settings)) {
+            $settings[$setting_name] = $setting_value;
+        }
+        $s = CRM_Core_BAO_Setting::setItem($settings, self::SETTINGS_NAME, self::SETTINGS_SLUG);
+
     }
 
     /**
@@ -607,7 +643,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         switch ($uen) {
             case ($uen[0] == 'S' || $uen[0] == 'T') && is_numeric(substr($uen, 1, 7)):
                 return $idTypes['nric'];
-            case ($uen[0] == 'F' || $uen[0] == 'G') && is_numeric(substr($uen, 1, 7)):
+            case ($uen[0] == 'F' || $uen[0] == 'G' || $uen[0] == 'M') && is_numeric(substr($uen, 1, 7)):
                 return $idTypes['fin'];
             case (strlen($uen) < 10 && is_numeric(substr($uen, 0, 8))):
                 return $idTypes['uenb'];
@@ -631,7 +667,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         switch ($uen) {
             case ($uen[0] == 'S' || $uen[0] == 'T') && is_numeric(substr($uen, 1, 7)):
                 return $idTypes['nric'];
-            case ($uen[0] == 'F' || $uen[0] == 'G') && is_numeric(substr($uen, 1, 7)):
+            case ($uen[0] == 'F' || $uen[0] == 'G' || $uen[0] == 'M') && is_numeric(substr($uen, 1, 7)):
                 return $idTypes['fin'];
             case (strlen($uen) < 10 && is_numeric(substr($uen, 0, 8))):
                 return $idTypes['uenb'];
@@ -888,13 +924,13 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                     'type_of_donation' => $type_of_donation,
                     'naming_donation' => $naming_donation
                 );
-                if(strlen($donation['address_line1']) == 0 or strlen($donation['address_line1']) > 30){
+                if (strlen($donation['address_line1']) == 0 or strlen($donation['address_line1']) > 30) {
                     unset($donation['address_line1']);
                 }
-                if(strlen($donation['address_line2']) == 0 or strlen($donation['address_line2']) > 30){
+                if (strlen($donation['address_line2']) == 0 or strlen($donation['address_line2']) > 30) {
                     unset($donation['address_line2']);
                 }
-                if(strlen($donation['postal_code']) == 0 or strlen($donation['postal_code']) > 30){
+                if (strlen($donation['postal_code']) == 0 or strlen($donation['postal_code']) > 30) {
                     unset($donation['postal_code']);
                 }
                 $online_donation = array(
@@ -912,13 +948,13 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                     'typeOfDonation' => $type_of_donation,
                     'namingDonation' => $naming_donation
                 );
-                if(strlen($online_donation['address_line1']) == 0 or strlen($online_donation['address_line1']) > 30){
+                if (strlen($online_donation['address_line1']) == 0 or strlen($online_donation['address_line1']) > 30) {
                     unset($online_donation['address_line1']);
                 }
-                if(strlen($online_donation['address_line2']) == 0 or strlen($online_donation['address_line2']) > 30){
+                if (strlen($online_donation['address_line2']) == 0 or strlen($online_donation['address_line2']) > 30) {
                     unset($online_donation['address_line2']);
                 }
-                if(strlen($online_donation['postal_code']) == 0 or strlen($online_donation['postal_code']) > 30){
+                if (strlen($online_donation['postal_code']) == 0 or strlen($online_donation['postal_code']) > 30) {
                     unset($online_donation['postal_code']);
                 }
                 $offline_donation = [1,
@@ -1167,8 +1203,6 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
 //            self::writeLog($sizeofchung, "in_event_sizeofchung");
             foreach ($donations as $key => $donation_) {
                 $donation = $donations[$key];
-                $contribution_id = $donation['contribution_id'];
-
                 // Connect to the database
                 $donation = $donations[$key];
                 $contribution_id = $donation['contribution_id'];
@@ -1330,6 +1364,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
             Civi::dispatcher()->dispatch('addZohoDonations', $backgroundEvent);
         }
     }
+
     /**
      * @param int $contact_id
      * @return int
@@ -1345,7 +1380,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
         if (isset($contact_custom_fields[$iras_custom_field])) {
             if ($contact_custom_fields[$iras_custom_field]) {
                 $custom_value = strval($contact_custom_fields[$iras_custom_field]);
-                self::writeLog($custom_value, 'custom_field: ' . $iras_custom_field);
+//                self::writeLog($custom_value, 'custom_field: ' . $iras_custom_field);
                 return $custom_value;
             }
         }
