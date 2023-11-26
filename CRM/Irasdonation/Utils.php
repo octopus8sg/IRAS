@@ -1259,8 +1259,8 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                 }
 
 
-                try {
-                    $database = CRM_Core_DAO::executeQuery("INSERT IGNORE INTO civicrm_o8_iras_donation_log(
+//                try {
+                    $database = \CRM_Core_DAO::executeQuery("INSERT IGNORE INTO civicrm_o8_iras_donation_log(
                                      record_id,
                                      id_type,
                                      id_number,
@@ -1278,29 +1278,31 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                                      iras_donation_id
                                    ) VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13, %14, %15)",
                         array(
-                            1 => array($record_id, 'Integer'),
-                            2 => array($id_type, 'String'),
+                            1 => array(intval($record_id), 'Integer'),
+                            2 => array(strval($id_type), 'String'),
                             3 => array(strval($id_number), 'String'),
-                            4 => array($individual_indicator, 'String'),
-                            5 => array($contact_name, 'String'),
-                            6 => array($address_line1, 'String'),
-                            7 => array($address_line2, 'String'),
-                            8 => array($postal_code, 'String'),
-                            9 => array($donation_amount, 'Integer'), // Assuming $donation_amount is a floating-point number
-                            10 => array($date_of_donation, 'String'),
-                            11 => array($receipt_num, 'String'),
-                            12 => array($type_of_donation, 'String'),
-                            13 => array($naming_donation, 'String'),
-                            14 => array($response_log_id, 'Integer'),
-                            15 => array($donation_id, 'Integer'),
+                            4 => array(strval($individual_indicator), 'String'),
+                            5 => array(strval($contact_name), 'String'),
+                            6 => array(strval($address_line1), 'String'),
+                            7 => array(strval($address_line2), 'String'),
+                            8 => array(strval($postal_code), 'String'),
+                            9 => array(intval($donation_amount), 'Integer'), // Assuming $donation_amount is a floating-point number
+                            10 => array(strval($date_of_donation), 'String'),
+                            11 => array(strval($receipt_num), 'String'),
+                            12 => array(strval($type_of_donation), 'String'),
+                            13 => array(strval($naming_donation), 'String'),
+                            14 => array(intval($response_log_id), 'Integer'),
+                            15 => array(intval($donation_id), 'Integer'),
                         )
                     );
+                    $queryString = CRM_Core_DAO::getLog();
+                    self::writeLog($queryString);
 //                    self::writeLog('Step 4: ' . $firstdonid . "_" . $donkey . "_" . $key . "_" . $contribution_id, "in_event_contribution_id");
 
-                } catch (Exception $e) {
-
-                    self::writeLog($e->getMessage(), "INSERT IGNORE INTO civicrm_o8_iras_donation_log");
-                }
+//                } catch (Exception $e) {
+//
+//                    self::writeLog($e->getMessage(), "INSERT IGNORE INTO civicrm_o8_iras_donation_log");
+//                }
 
                 try {
                     $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
