@@ -1164,22 +1164,22 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                                           created_date) VALUES (
                                             %1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13, %14, %15, %16)",
             array(
-                1 => array($is_api, 'Integer'),
-                2 => array($validate_only, 'Integer'),
-                3 => array($basis_year, 'String'),
-                4 => array($organisation_id_type, 'String'),
-                5 => array($organisation_id_no, 'String'),
-                6 => array($organisation_name, 'String'),
-                7 => array($batch_indicator, 'String'),
-                8 => array($authorised_person_name, 'String'),
-                9 => array($authorised_person_designation, 'String'),
-                10 => array($telephone, 'String'),
-                11 => array($authorised_person_email, 'String'),
-                12 => array($num_of_records, 'Integer'),
-                13 => array($total_donation_amount, 'Float'), // Assuming $total_donation_amount is a floating-point number
-                14 => array($response_body, 'String'),
-                15 => array($response_code, 'Integer'),
-                16 => array($generatedDate, 'String'),
+                1 => array(intval($is_api), 'Integer'),
+                2 => array(intval($validate_only), 'Integer'),
+                3 => array(strval($basis_year), 'String'),
+                4 => array(strval($organisation_id_type), 'String'),
+                5 => array(strval($organisation_id_no), 'String'),
+                6 => array(strval($organisation_name), 'String'),
+                7 => array(strval($batch_indicator), 'String'),
+                8 => array(strval($authorised_person_name), 'String'),
+                9 => array(strval($authorised_person_designation), 'String'),
+                10 => array(strval($telephone), 'String'),
+                11 => array(strval($authorised_person_email), 'String'),
+                12 => array(intval($num_of_records), 'Integer'),
+                13 => array(floatval($total_donation_amount), 'Float'), // Assuming $total_donation_amount is a floating-point number
+                14 => array(strval($response_body), 'String'),
+                15 => array(intval($response_code), 'Integer'),
+                16 => array(strval($generatedDate), 'String'),
             )
         );
         $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
@@ -1202,12 +1202,10 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
 //            self::writeLog($donkey, "key of chunk");
 //            self::writeLog($sizeofchung, "in_event_sizeofchung");
             foreach ($donations as $key => $donation_) {
-                $donation = $donations[$key];
                 // Connect to the database
                 $donation = $donations[$key];
-                $contribution_id = $donation['contribution_id'];
+                $contribution_id = intval($donation['contribution_id']);
 //                self::writeLog('Step 1: ' . $firstdonid . "_" . $donkey . "_" . $key . "_" . $contribution_id, "in_event_contribution_id");
-
                 $record_id = $donation['record_id'];
                 $id_type = $donation['id_type'];
                 $id_number = $donation['id_number'];
@@ -1231,8 +1229,8 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                                      contribution_id,
                                      created_date) VALUES (%1, %2)",
                         array(
-                            1 => array($contribution_id, 'Integer'), // Assuming $contribution_id is an integer
-                            2 => array($generatedDate, 'String'),     // Assuming $generatedDate is a string
+                            1 => array(intval($contribution_id), 'Integer'), // Assuming $contribution_id is an integer
+                            2 => array(strval($generatedDate), 'String'),     // Assuming $generatedDate is a string
                         )
                     );
 //                    self::writeLog('Step 2: ' . $firstdonid . "_" . $donkey . "_" . $key . "_" . $contribution_id, "in_event_contribution_id");
@@ -1259,7 +1257,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                 }
 
 
-//                try {
+                try {
                     $database = \CRM_Core_DAO::executeQuery("INSERT IGNORE INTO civicrm_o8_iras_donation_log(
                                      record_id,
                                      id_type,
@@ -1299,10 +1297,10 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
                     self::writeLog($queryString);
 //                    self::writeLog('Step 4: ' . $firstdonid . "_" . $donkey . "_" . $key . "_" . $contribution_id, "in_event_contribution_id");
 
-//                } catch (Exception $e) {
-//
-//                    self::writeLog($e->getMessage(), "INSERT IGNORE INTO civicrm_o8_iras_donation_log");
-//                }
+                } catch (Exception $e) {
+
+                    self::writeLog($e->getMessage(), "INSERTING civicrm_o8_iras_donation_log");
+                }
 
                 try {
                     $result = CRM_Core_DAO::executeQuery('SELECT LAST_INSERT_ID() id;', CRM_Core_DAO::$_nullArray);
@@ -1312,7 +1310,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
 
                 try {
                     while ($result->fetch()) {
-                        $donation_log_id = $result->id;
+                        $donation_log_id = intval($result->id);
 
 
                     }
@@ -1363,7 +1361,7 @@ LEFT JOIN civicrm_phone   ON ( civicrm_contact.id = civicrm_phone.contact_id )
             $backgroundEvent->setArgument('parameters', $myParameters);
             self::showStatusMessage('Sent a chunk #' . $key . " to dispatcher", "Dispatcher");
 // Dispatch the BackgroundProcessEvent event
-            Civi::dispatcher()->dispatch('addZohoDonations', $backgroundEvent);
+            Civi::dispatcher()->dispatch('addIrasDonations', $backgroundEvent);
         }
     }
 

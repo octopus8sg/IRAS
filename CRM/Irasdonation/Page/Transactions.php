@@ -138,7 +138,7 @@ class CRM_Irasdonation_Page_Transactions extends CRM_Core_Page
          INNER JOIN civicrm_contact contact ON contact.id = contribution.contact_id
          INNER JOIN civicrm_financial_type fintype ON fintype.id = contribution.financial_type_id
          LEFT JOIN civicrm_o8_iras_donation donation ON contribution.id = donation.contribution_id
-         LEFT JOIN civicrm_o8_iras_donation_log donation_log ON donation_log.id = donation.last_donation_log_id
+         LEFT JOIN civicrm_o8_iras_donation_log donation_log ON donation.id = donation_log.iras_donation_id
          LEFT JOIN civicrm_o8_iras_response_log response_log ON response_log.id = donation_log.iras_response_id
         WHERE $where
             ";
